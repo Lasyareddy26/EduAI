@@ -23,23 +23,27 @@ function StudentAnalytics() {
         axios.get('http://localhost:3000/teacher-api/students'),
       ])
 
-      const allPaths = pathRes.data.payload || []
+      let allPaths = pathRes.data?.payload
+      if (!Array.isArray(allPaths)) {
+        allPaths = allPaths ? [allPaths] : []
+      }
       setPaths(allPaths)
       if (allPaths.length > 0) setSelectedTopic(allPaths[0].topic)
 
       // Find the student info
-      const students = studentsRes.data.payload || []
+      const students = studentsRes.data?.payload || []
       const found = students.find(s => s._id === studentId)
       setStudent(found || null)
 
       setLoading(false)
     } catch (err) {
       console.error("Error:", err)
+      setPaths([])
       setLoading(false)
     }
   }
 
-  const activePath = paths.find(p => p.topic === selectedTopic)
+  const activePath = Array.isArray(paths) ? paths.find(p => p.topic === selectedTopic) : null
 
   const getLevelInfo = (level) => {
     switch (level) {

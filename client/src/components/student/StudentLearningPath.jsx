@@ -19,18 +19,23 @@ function StudentLearningPath() {
 
     axios.get(`http://localhost:3000/student-api/learning-path/${userId}`)
       .then(res => {
-        const data = res.data.payload || []
+        let data = res.data?.payload
+        // Ensure data is always an array
+        if (!Array.isArray(data)) {
+          data = data ? [data] : []
+        }
         setPaths(data)
         if (data.length > 0) setSelectedTopic(data[0].topic)
         setLoading(false)
       })
       .catch(err => {
         console.error("Error fetching learning paths:", err)
+        setPaths([])
         setLoading(false)
       })
   }, [userId])
 
-  const activePath = paths.find(p => p.topic === selectedTopic)
+  const activePath = Array.isArray(paths) ? paths.find(p => p.topic === selectedTopic) : null
 
   const getLevelInfo = (level) => {
     switch (level) {
