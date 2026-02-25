@@ -1,0 +1,15 @@
+/* src/components/common/Register.css */
+
+.register-container {
+  /* Force Center Alignment */
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  
+  /* Takes up the full view height minus header/footer space */
+  min-height: 85vh !important; 
+  width: 100% !important;
+  
+  /* Optional: Background if you want the form area to stand out slightly */
+  background-color: transparent !important;
+}

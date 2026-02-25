@@ -1,0 +1,249 @@
+/* CONTAINER */
+.as-container {
+  padding: 30px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  animation: asFadeIn 0.4s ease-out;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* HEADER */
+.as-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+.as-back-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 10px;
+  padding: 0;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.as-back-btn:hover {
+  color: #240046;
+  text-decoration: underline;
+}
+
+.as-title {
+  color: #240046;
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+/* STATS ROW */
+.as-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.as-stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+}
+
+.as-stat-label {
+  font-size: 0.85rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.as-stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #240046;
+}
+
+.text-green { color: #2a9d8f; }
+
+/* TABLE STYLING */
+.as-table-wrapper {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  border: 1px solid #e9ecef;
+  overflow: hidden; /* Rounds the corners of the table */
+}
+
+.as-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.as-table thead {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.as-table th {
+  text-align: left;
+  padding: 18px 25px;
+  color: #555;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.as-table td {
+  padding: 16px 25px;
+  border-bottom: 1px solid #f1f1f1;
+  color: #333;
+  vertical-align: middle;
+}
+
+.as-table tr:last-child td {
+  border-bottom: none;
+}
+
+.as-table tr:hover {
+  background-color: #faf8fc;
+}
+
+/* STUDENT INFO COLUMN */
+.as-student-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.as-avatar {
+  width: 35px;
+  height: 35px;
+  background: #e0aaff;
+  color: #240046;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.as-name {
+  font-weight: 600;
+  color: #10002b;
+}
+
+.as-email {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.as-date {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+/* SCORE COLUMN */
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+
+.as-score-badge {
+  background: #ecfccb; /* Light lime green */
+  color: #365314;     /* Dark green text */
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* ACTION BUTTON */
+.as-view-btn {
+  background: transparent;
+  border: 1px solid #e0e0e0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #666;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.as-view-btn:hover {
+  background: #240046;
+  color: white;
+  border-color: #240046;
+}
+
+/* STATES */
+.as-loading, .as-empty {
+  text-align: center;
+  padding: 60px;
+  color: #888;
+}
+
+@keyframes asFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .as-container { padding: 20px; }
+  .as-table-wrapper { overflow-x: auto; } /* Scrollable table on mobile */
+  .as-stats-row { grid-template-columns: 1fr; }
+}
+
+/* --- HEADER SECTION --- */
+.as-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 20px;
+  display: flex;
+  flex-direction: column; /* Stacks back button above title */
+  gap: 15px;
+}
+
+/* Styled Back Button */
+.as-back-btn {
+  align-self: flex-start; /* Aligns to the left */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f3e5f5; /* Light purple background */
+  color: #4a0072; /* Darker purple text */
+  border: 1px solid #e0aaff;
+  padding: 8px 16px;
+  border-radius: 30px; /* Pill shape */
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none; /* Removes default underline */
+}
+
+/* Hover Effect */
+.as-back-btn:hover {
+  background-color: #240046; /* Dark purple on hover */
+  color: #ffffff; /* White text */
+  border-color: #240046;
+  transform: translateX(-3px); /* Subtle slide left movement */
+  box-shadow: 0 4px 10px rgba(123, 44, 191, 0.2);
+  text-decoration: none;
+}
+
+.as-title {
+  color: #240046;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}

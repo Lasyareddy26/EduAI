@@ -1,0 +1,106 @@
+/* src/components/common/Header.css */
+
+/* 1. The Main Header Strip */
+.header-container {
+  /* Uses the global purple variable, falls back to deep purple if missing */
+  background-color: var(--header-bg, #240046); 
+  color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow like Amazon */
+  position: sticky;
+  top: 0;
+  z-index: 1000; /* Keeps header on top of everything */
+}
+
+/* 2. Inner Content Wrapper (Matches Page Width) */
+.header-content {
+  max-width: 1500px; /* Matches your RootLayout width */
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 70px; /* Fixed height for consistency */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 3. Brand / Logo Styling */
+.brand-logo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: opacity 0.2s;
+}
+
+.brand-logo:hover {
+  opacity: 0.9;
+  color: white; /* Ensure it stays white on hover */
+  text-decoration: none;
+}
+
+.logo-icon {
+  font-size: 2rem;
+}
+
+/* 4. Navigation Links List */
+.nav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 25px; /* Spacing between links */
+}
+
+/* 5. Individual Link Styling */
+.nav-item {
+  color: #e0e0e0; /* Slightly off-white for normal state */
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 5px 0;
+  position: relative; /* For the underline effect */
+  transition: color 0.2s ease;
+}
+
+/* Hover Effect: Turns Gold/Orange */
+.nav-item:hover {
+  color: var(--accent-color, #ff9e00);
+}
+
+/* Optional: Animated Underline on Hover */
+.nav-item::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--accent-color, #ff9e00);
+  transition: width 0.3s ease;
+}
+
+.nav-item:hover::after {
+  width: 100%;
+}
+
+/* 6. Special Style for "Login" to make it pop */
+.login-btn {
+  border: 1px solid white;
+  padding: 8px 20px;
+  border-radius: 4px;
+  color: white;
+}
+
+.login-btn:hover {
+  background-color: white;
+  color: var(--header-bg, #240046); /* Text turns purple */
+}
+
+/* Remove underline animation for the button */
+.login-btn::after {
+  display: none;
+}

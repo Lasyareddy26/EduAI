@@ -1,0 +1,111 @@
+/* src/components/common/Footer.css */
+
+/* 1. Wrapper to hold everything */
+.footer-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: auto; /* Ensures it sits at bottom if page is short */
+  font-family: 'Arial', sans-serif;
+}
+
+/* 2. "Back to Top" Button (Amazon Style) */
+.back-to-top {
+  background-color: #4a148c; /* Slightly lighter purple than header */
+  color: white;
+  text-align: center;
+  padding: 15px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.back-to-top:hover {
+  background-color: #5a189a; /* Highlight on hover */
+}
+
+/* 3. Main Footer Area */
+.footer-main {
+  background-color: var(--footer-bg, #3c096c); /* Your global Footer variable */
+  padding: 40px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.footer-content {
+  max-width: 1000px; /* Keep columns closer to center like Amazon */
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-evenly; /* Even spacing between columns */
+  flex-wrap: wrap; /* Wraps on mobile */
+  gap: 30px;
+  padding: 0 20px;
+}
+
+/* 4. Columns & Links */
+.footer-col {
+  min-width: 150px;
+}
+
+.footer-col h4 {
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-col ul li {
+  margin-bottom: 10px;
+}
+
+.footer-col ul li a {
+  color: #e0e0e0; /* Off-white text */
+  text-decoration: none;
+  font-size: 13px;
+  transition: text-decoration 0.2s;
+}
+
+.footer-col ul li a:hover {
+  text-decoration: underline; /* Amazon link hover style */
+  color: #ff9e00; /* Gold accent */
+}
+
+/* 5. Bottom Copyright Area */
+.footer-bottom {
+  background-color: #240046; /* Darker shade (same as Header) */
+  padding: 25px 0;
+  text-align: center;
+  color: #ccc;
+  font-size: 12px;
+}
+
+.logo-line {
+  margin-bottom: 10px;
+}
+
+.footer-logo {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+}
+
+.copyright {
+  margin: 5px 0;
+}
+
+/* 6. Your Name Highlight */
+.designer-credit {
+  margin-top: 10px;
+  color: #999;
+}
+
+.my-name {
+  color: #ff9e00; /* Gold color for your name */
+  font-weight: bold;
+}

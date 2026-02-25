@@ -1,0 +1,101 @@
+/* 1. Define the "Purple Amazon" Palette */
+:root {
+  /* --- THEME COLORS: PURPLE EDITION --- */
+  
+  /* Header: Replaces Amazon's Dark Blue (#131921) */
+  --header-bg: #240046;  /* Deep Royal Purple */
+  
+  /* Footer: Replaces Amazon's Lighter Blue (#232f3e) */
+  --footer-bg: #3c096c;  /* Rich Violet */
+  
+  /* Background: A very soft, almost white purple-gray */
+  --body-bg: #f3f0f5;    
+  
+  /* Accents: Gold/Yellow (Complementary to Purple, just like Amazon's orange) */
+  --accent-color: #ff9e00; 
+  --accent-hover: #ffaa00;
+  
+  /* Text Colors */
+  --text-main: #10002b;  /* Very dark purple/black */
+  --text-muted: #5a189a; /* Medium purple for links/secondary text */
+}
+
+/* 2. Global Structure */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Arial', sans-serif; /* Clean, standard font like Amazon */
+  background-color: var(--body-bg);
+  color: var(--text-main);
+}
+
+/* 3. The Main App Container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Forces Footer to bottom */
+  background-color: var(--body-bg); /* Unified background */
+}
+
+/* 4. The Main Content Area */
+.main-content {
+  flex: 1; /* Pushes footer down */
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  
+  /* No padding here allows full-width banners if you have them.
+     If you want spacing like Amazon, use: padding: 20px; */
+  padding: 20px 0; 
+}
+
+/* 5. The Content Wrapper (The "Home") */
+.content-wrapper {
+  width: 100%;
+  max-width: 1500px; /* Amazon-style wide layout */
+  margin: 0 auto;
+  padding: 0 20px;   /* Gutters on the side */
+
+  /* SEAMLESS DESIGN:
+     - Transparent background (so it blends with the page)
+     - No shadows
+     - No borders 
+  */
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+/* --------------------------------------------------------- */
+/* OPTIONAL: Helper classes for your Header/Footer components */
+/* You can add these classNames to your Header/Footer JSX     */
+/* --------------------------------------------------------- */
+
+/* Use this for your <header> tag */
+.header-theme {
+  background-color: var(--header-bg);
+  color: white;
+}
+
+/* Use this for your <footer> tag */
+.footer-theme {
+  background-color: var(--footer-bg);
+  color: white;
+}
+
+/* Amazon-style Buttons (Gold on Purple) */
+button {
+  background: linear-gradient(to bottom, #ffc107, #ff9e00);
+  border: 1px solid #b8860b;
+  color: #240046; /* Dark purple text on button for readability */
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:hover {
+  background: #ffaa00;
+}

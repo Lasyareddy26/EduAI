@@ -1,0 +1,250 @@
+/* src/components/common/Home.css */
+
+/* 1. Hero Section - Pure Info */
+
+.home-hero {
+  /* The Deep Purple Amazon Gradient */
+  background: linear-gradient(to right, #240046, #5a189a); 
+  color: white;
+  padding: 60px 20px; /* Increased padding slightly */
+  border-radius: 8px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(36, 0, 70, 0.2);
+  
+  /* CENTER ALIGNMENT FIXES: */
+  text-align: center;        /* Centers the text */
+  display: flex;             /* Uses flexbox to center content vertically/horizontally */
+  justify-content: center;   /* Centers the inner div horizontally */
+  align-items: center;       /* Centers the inner div vertically (if height is fixed) */
+}
+.hero-content {
+  max-width: 10000px;
+}
+
+.home-hero h1 {
+  margin: 0 0 15px 0;
+  font-size: 2.8rem; /* Larger, readable heading */
+  font-weight: 700;
+  color: #ff9e00; /* Gold accent text for the title */
+}
+
+.home-hero p {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  opacity: 0.95;
+}
+
+/* 2. The Grid Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+  width: 100%;
+}
+
+/* 3. Info Cards - Informational Only */
+.info-card {
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 30px; /* More internal spacing */
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%; /* Makes all cards same height */
+}
+
+.info-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(60, 9, 108, 0.1);
+  border-color: #9d4edd;
+}
+
+/* Headings inside cards */
+.info-card h3 {
+  color: #240046; /* Deep Purple */
+  margin-top: 0;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #f3f0f5;
+  padding-bottom: 12px;
+  margin-bottom: 15px;
+}
+
+/* Paragraph text inside cards */
+.info-card p {
+  color: #444; /* Dark Grey for high readability */
+  line-height: 1.6;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+/* 4. Feature List Styling */
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  margin-top: auto; /* Pushes list to the bottom if content varies */
+}
+
+.feature-list li {
+  padding: 10px 0;
+  border-top: 1px solid #f0f0f0;
+  color: #5a189a; /* Medium Purple for list items */
+  font-weight: 500;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Adds a small bullet point before list items */
+.feature-list li::before {
+  content: "•";
+  color: #ff9e00; /* Gold bullet */
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-right: 10px;
+}
+/* --- ROLE SELECTION UI (Authenticated View) --- */
+
+.role-selection-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh; /* Centers vertically */
+  padding: 20px;
+}
+
+.role-card-container {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(36, 0, 70, 0.15); /* Soft purple shadow */
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+  animation: slideUp 0.5s ease-out;
+}
+
+/* Profile Picture & Text */
+.profile-img-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 4px solid #f3f0f5; /* Light purple ring */
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.profile-header h2 {
+  color: #240046; /* Deep Purple */
+  margin: 10px 0 5px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.divider {
+  border: 0;
+  height: 1px;
+  background: #eee;
+  margin: 20px 0;
+}
+
+/* Role Selection Grid */
+.role-form h3 {
+  color: #240046;
+  margin-bottom: 20px;
+}
+
+.role-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+/* The Radio Card Styling */
+.role-option {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  position: relative;
+}
+
+/* Hide the actual radio circle, use CSS to style the box instead */
+.role-option input[type="radio"] {
+  display: none; 
+}
+
+/* Hover State */
+.role-option:hover {
+  border-color: #9d4edd; /* Lighter Purple */
+  background-color: #fcfaff;
+}
+
+/* Active/Selected State */
+.role-option.active {
+  border-color: #240046;
+  background-color: #f3f0f5; /* Very light purple bg */
+  box-shadow: 0 0 0 1px #240046; /* Double border effect */
+}
+
+/* Icons and Text */
+.role-icon {
+  font-size: 2rem;
+  margin-right: 15px;
+}
+
+.role-text {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+.role-text strong {
+  color: #240046;
+  font-size: 1.1rem;
+}
+
+.role-text small {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Continue Button */
+.continue-btn {
+  background-color: #240046 !important;
+  color: white !important;
+  border: none !important;
+  padding: 14px 24px !important;
+  border-radius: 8px !important;
+  font-size: 1rem !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  transition: background 0.3s !important;
+}
+
+.continue-btn:hover {
+  background-color: #3c096c;
+}
+
+.continue-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Animation */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

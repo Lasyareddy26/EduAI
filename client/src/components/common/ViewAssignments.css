@@ -1,0 +1,240 @@
+/* --- CONTAINER & HEADER --- */
+.va-page-container {
+  padding: 30px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: vaFadeIn 0.5s ease-out;
+}
+
+.va-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 20px;
+}
+
+.va-page-title {
+  color: #240046;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.va-btn-create {
+  background: #240046;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(36, 0, 70, 0.2);
+  transition: transform 0.2s;
+}
+
+.va-btn-create:hover {
+  background: #3c096c;
+  transform: translateY(-2px);
+}
+
+/* --- GRID LAYOUT --- */
+.va-grid-layout {
+  display: grid;
+  /* This ensures cards are never smaller than 320px but stretch to fill space */
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+  gap: 30px;
+}
+
+/* --- CARD STRUCTURE --- */
+.va-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  height: 100%; /* Ensures uniform height in rows */
+}
+
+.va-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border-color: #9d4edd;
+}
+
+/* --- CARD HEADER --- */
+.va-card-header {
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.va-badge-subject {
+  background: #e0aaff;
+  color: #240046;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.va-text-deadline {
+  font-size: 0.75rem;
+  color: #c1121f;
+  font-weight: 600;
+}
+
+/* --- CARD BODY --- */
+.va-card-body {
+  padding: 20px;
+  flex-grow: 1; /* Pushes footer to bottom */
+}
+
+.va-text-title {
+  margin: 0 0 5px 0;
+  color: #10002b;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.va-text-topic {
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-bottom: 15px;
+}
+
+.va-meta-tags {
+  display: flex;
+  gap: 10px;
+}
+
+.va-tag {
+  background: #fdfaff;
+  border: 1px solid #e9ecef;
+  color: #5a189a;
+  font-size: 0.8rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* --- CARD FOOTER --- */
+.va-card-footer {
+  padding: 15px 20px;
+  background: white;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between; /* Pushes buttons apart */
+  align-items: center;
+}
+
+.va-btn-expand {
+  background: transparent;
+  border: none;
+  color: #7b2cbf;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.va-btn-expand:hover {
+  background: #f3f0f5;
+}
+
+.va-btn-submissions {
+  background: #ff9e00;
+  color: #240046;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(255, 158, 0, 0.3);
+  transition: background 0.2s;
+}
+
+.va-btn-submissions:hover {
+  background: #ffaa00;
+}
+
+/* --- EXPANDED PANEL --- */
+.va-stats-panel {
+  background: #faf8fc;
+  padding: 15px 20px;
+  border-top: 1px dashed #dcdcdc;
+  animation: vaSlideDown 0.3s ease-out;
+}
+
+.va-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.va-stat-item {
+  background: white;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  border: 1px solid #e9ecef;
+}
+
+.va-stat-label {
+  display: block;
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.va-stat-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #240046;
+}
+
+.va-preview-section h4 {
+  font-size: 0.8rem;
+  margin: 0 0 5px 0;
+  color: #555;
+}
+
+.va-preview-section ul {
+  padding-left: 20px;
+  margin: 0;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* --- UTILS --- */
+.va-loading-msg, .va-empty-state, .va-error-msg {
+  text-align: center;
+  color: #6c757d;
+  margin-top: 40px;
+  font-size: 1.1rem;
+}
+
+.va-error-msg { color: #d00000; }
+
+@keyframes vaFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vaSlideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

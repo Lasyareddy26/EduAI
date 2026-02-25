@@ -1,0 +1,24 @@
+.sa-container { padding: 30px; max-width: 1200px; margin: 0 auto; }
+.sa-header { border-bottom: 2px solid #e0e7ff; padding-bottom: 15px; margin-bottom: 30px; }
+.sa-title { color: #1e1b4b; font-size: 1.8rem; font-weight: 800; }
+.sa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+
+.sa-card {
+  background: white; border: 1px solid #e0e7ff; border-radius: 16px;
+  padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  transition: transform 0.2s; display: flex; flex-direction: column;
+}
+.sa-card:hover { transform: translateY(-5px); border-color: #a5b4fc; }
+
+.sa-card-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.sa-badge { background: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;}
+.sa-date { color: #ef4444; font-size: 0.8rem; font-weight: 600; }
+
+.sa-card-title { margin: 0 0 15px 0; color: #111827; font-size: 1.2rem; }
+.sa-meta { display: flex; gap: 15px; font-size: 0.85rem; color: #6b7280; margin-bottom: 20px; }
+
+.sa-attempt-btn {
+  background: rgba(150, 60, 224, 0.4); color: black; border: none; padding: 10px;
+  border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: auto; width: 100%;
+}
+.sa-attempt-btn:hover { background: #7b19c1; color:white; }
