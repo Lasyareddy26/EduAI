@@ -8,3 +8,4 @@ pypdf
 python-dotenv
 flask
 flask-cors
+sentence-transformers

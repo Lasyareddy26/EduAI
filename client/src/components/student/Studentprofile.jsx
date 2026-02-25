@@ -30,6 +30,15 @@ function StudentProfile() {
 
         {/* Navigation Menu */}
         <nav className="sidebar-nav">
+          <p className="nav-label">OVERVIEW</p>
+
+          <NavLink to="" end className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+            <span className="nav-icon">🏠</span>
+            <span className="nav-text">Dashboard</span>
+          </NavLink>
+
+          <div className="nav-divider"></div>
+
           <p className="nav-label">ACADEMIC</p>
           
           <NavLink to="available-assignments" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>

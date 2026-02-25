@@ -27,11 +27,15 @@ const assignmentSchema = new mongoose.Schema({
       questionText: String,
       type: {
         type: String,
-        enum: ["mcq", "short", "essay"]
+        enum: ["mcq", "short", "essay", "truefalse", "fillblank"]
       },
-      options: [String],       // for MCQs
-      correctAnswer: String,   // for MCQs / reference
-      marks: Number
+      options: [String],       // for MCQs and True/False
+      correctAnswer: String,   // for MCQ / True-False / Fill-in-the-blank (auto-eval)
+      marks: Number,
+      autoEvaluate: {          // true for mcq, truefalse, fillblank; false for short, essay
+        type: Boolean,
+        default: true
+      }
     }
   ],
 

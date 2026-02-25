@@ -92,7 +92,13 @@ function StudentSubmissions() {
                     </td>
                     <td className="text-muted">{formatDate(sub.createdAt)}</td>
                     <td>
-                      <span className="status-badge success">Completed</span>
+                      <span className={`status-badge ${
+                        sub.evaluationStatus === 'pending-review' ? 'warning' :
+                        sub.evaluationStatus === 'reviewed' ? 'success' : 'success'
+                      }`}>
+                        {sub.evaluationStatus === 'pending-review' ? '⏳ Pending Review' :
+                         sub.evaluationStatus === 'reviewed' ? '✅ Reviewed' : '✅ Auto-Graded'}
+                      </span>
                     </td>
                   </tr>
                 )

@@ -204,7 +204,10 @@ def generate_questions():
                     q["type"] = type_map.get(q_type, "short")
                     if "marks" not in q:
                         q["marks"] = 1
-                    if q["type"] != "mcq" and "options" in q:
+                    # Keep options for mcq; set True/False options for truefalse; remove for others
+                    if q["type"] == "truefalse":
+                        q["options"] = ["True", "False"]
+                    elif q["type"] != "mcq" and "options" in q:
                         del q["options"]
                 return jsonify({"message": "Questions generated", "payload": questions})
         except (json.JSONDecodeError, ValueError):

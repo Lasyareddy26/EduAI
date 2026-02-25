@@ -231,12 +231,54 @@ teacherApp.post("/create-assignment", (req, res) => {
 teacherApp.get("/view-submissions/:assignmentId", (req, res) => {
   submissionModel.find({ assignmentId: req.params.assignmentId })
     .populate("studentId", "firstName lastName email")
+    .populate("assignmentId", "title subject totalMarks questions")
     .then(submissions =>
       res.send({ message: "Submissions fetched", payload: submissions })
     )
     .catch(err =>
       res.status(500).send({ message: "Error", payload: err.message })
     )
+})
+
+// TEACHER → GRADE A SUBMISSION (manual scoring for Short/Essay answers)
+teacherApp.put("/grade-submission/:submissionId", async (req, res) => {
+  try {
+    const { answers, teacherFeedback } = req.body;
+    // answers = [{ questionId, marksAwarded, teacherComment }]
+
+    const submission = await submissionModel.findById(req.params.submissionId);
+    if (!submission) {
+      return res.status(404).send({ message: "Submission not found" });
+    }
+
+    let manualScore = 0;
+
+    // Update each answer's manual score
+    for (const graded of answers) {
+      const existingAnswer = submission.answers.find(
+        a => a.questionId === graded.questionId
+      );
+      if (existingAnswer) {
+        existingAnswer.marksAwarded = Number(graded.marksAwarded) || 0;
+        existingAnswer.isCorrect = existingAnswer.marksAwarded > 0;
+        existingAnswer.teacherComment = graded.teacherComment || "";
+        manualScore += existingAnswer.marksAwarded;
+      }
+    }
+
+    submission.manualScore = manualScore;
+    submission.finalScore = submission.autoScore + manualScore;
+    submission.evaluationStatus = "reviewed";
+    submission.status = "reviewed";
+    if (teacherFeedback) submission.teacherFeedback = teacherFeedback;
+
+    await submission.save();
+
+    res.send({ message: "Submission graded successfully", payload: submission });
+  } catch (err) {
+    console.error("Grading Error:", err);
+    res.status(500).send({ message: "Grading failed", payload: err.message });
+  }
 })
 
 // TEACHER → VIEW AI LEARNING PATH OF STUDENT

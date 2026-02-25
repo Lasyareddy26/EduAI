@@ -13,6 +13,7 @@ function SubmitAssignment() {
   const [userAnswers, setUserAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [hasManual, setHasManual] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // 1. Fetch Assignment
@@ -21,7 +22,11 @@ function SubmitAssignment() {
     
     axios.get(`http://localhost:3000/student-api/assignment/${assignmentId}`)
       .then(res => {
-        setAssignment(res.data.payload);
+        const asg = res.data.payload;
+        setAssignment(asg);
+        // Check if there are manually graded questions
+        const manual = asg.questions.some(q => q.type === 'short' || q.type === 'essay');
+        setHasManual(manual);
         setLoading(false);
       })
       .catch(err => {
@@ -30,53 +35,39 @@ function SubmitAssignment() {
       });
   }, [assignmentId]);
 
-  // 2. Handle Option Selection
-  const handleOptionSelect = (qId, option) => {
+  // 2. Handle answer changes
+  const handleAnswerChange = (qId, value) => {
     if (isSubmitted) return;
-    setUserAnswers(prev => ({
-      ...prev,
-      [qId]: option
-    }));
+    setUserAnswers(prev => ({ ...prev, [qId]: value }));
   };
 
-  // 3. Submit Logic (Fixed for Session Issues)
+  // 3. Submit Logic
   const handleSubmit = () => {
     if (!window.confirm("Are you sure you want to submit?")) return;
 
-    // --- 🛡️ ROBUST SESSION CHECK START ---
     let currentUser = users;
-    
-    // Debug 1: Check Context
-    console.log("Checking Context User:", currentUser);
-
-    // If context is missing OR missing the _id (which happens if it's the default empty state)
     if (!currentUser || !currentUser._id) {
-      console.log("Context empty. Checking LocalStorage...");
       const storedUser = localStorage.getItem("user");
-      
       if (storedUser) {
-        try {
-          currentUser = JSON.parse(storedUser);
-          console.log("Found User in LocalStorage:", currentUser);
-        } catch (e) {
-          console.error("Error parsing LocalStorage user:", e);
-          currentUser = null;
-        }
+        try { currentUser = JSON.parse(storedUser); } catch (e) { currentUser = null; }
       }
     }
-
-    // Final Check: If we still don't have an ID, we cannot submit.
     if (!currentUser || !currentUser._id) {
       alert("Session expired! Redirecting to login...");
-      navigate('/login'); // Redirects user to login page automatically
+      navigate('/login');
       return;
     }
-    // --- 🛡️ ROBUST SESSION CHECK END ---
 
+    // Client-side auto-score for immediate feedback (MCQ, T/F, Fill-in-blank)
     let calculatedScore = 0;
     assignment.questions.forEach(q => {
-      if (userAnswers[q._id] === q.correctAnswer) {
-        calculatedScore += q.marks;
+      const studentAns = (userAnswers[q._id] || "").trim().toLowerCase();
+      const correctAns = (q.correctAnswer || "").trim().toLowerCase();
+      
+      if (q.type === 'mcq' || q.type === 'truefalse' || q.type === 'fillblank') {
+        if (studentAns === correctAns) {
+          calculatedScore += q.marks;
+        }
       }
     });
 
@@ -84,17 +75,14 @@ function SubmitAssignment() {
     setIsSubmitted(true);
 
     const submissionPayload = {
-      studentId: currentUser._id,   // ✅ Using the safely resolved currentUser
+      studentId: currentUser._id,
       assignmentId: assignmentId,
       answers: Object.entries(userAnswers).map(([qId, ans]) => ({
         questionId: qId,
         answer: ans
       })),
-      finalScore: calculatedScore, // Matches your Schema
       status: "submitted"
     };
-
-    console.log("📤 Sending Payload:", submissionPayload);
 
     axios.post('http://localhost:3000/student-api/submit-assignment', submissionPayload)
       .then(res => {
@@ -108,6 +96,9 @@ function SubmitAssignment() {
 
   if (loading) return <div className="quiz-loading">Loading Assignment...</div>;
   if (!assignment) return <div className="quiz-error">Assignment not found!</div>;
+
+  // Helper: is this an auto-evaluable type?
+  const isAutoEval = (type) => ['mcq', 'truefalse', 'fillblank'].includes(type);
 
   return (
     <div className="quiz-container">
@@ -124,46 +115,142 @@ function SubmitAssignment() {
 
       <div className="quiz-questions-list">
         {assignment.questions.map((q, index) => {
-          const isCorrect = userAnswers[q._id] === q.correctAnswer;
-          
+          const studentAns = (userAnswers[q._id] || "").trim().toLowerCase();
+          const correctAns = (q.correctAnswer || "").trim().toLowerCase();
+          const isCorrect = isAutoEval(q.type) && studentAns === correctAns;
+
+          // Type badge color
+          const typeBadge = {
+            mcq: { label: 'MCQ', color: '#7b2cbf' },
+            truefalse: { label: 'True/False', color: '#2563eb' },
+            fillblank: { label: 'Fill in the Blank', color: '#d97706' },
+            short: { label: 'Short Answer', color: '#059669' },
+            essay: { label: 'Essay', color: '#dc2626' },
+          }[q.type] || { label: q.type, color: '#666' };
+
           return (
-            <div key={q._id} className={`question-card ${isSubmitted ? (isCorrect ? 'card-correct' : 'card-wrong') : ''}`}>
+            <div key={q._id} className={`question-card ${isSubmitted && isAutoEval(q.type) ? (isCorrect ? 'card-correct' : 'card-wrong') : ''}`}>
               <div className="q-header">
                 <span className="q-number">Q{index + 1}</span>
+                <span style={{
+                  background: typeBadge.color, color: '#fff', padding: '2px 10px',
+                  borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600
+                }}>{typeBadge.label}</span>
                 <p className="q-text">{q.questionText}</p>
-                <span className="q-marks">{q.marks} Mark</span>
+                <span className="q-marks">{q.marks} Mark{q.marks > 1 ? 's' : ''}</span>
               </div>
 
-              <div className="options-grid">
-                {q.options.map((option, i) => {
-                  const isSelected = userAnswers[q._id] === option;
-                  let optionClass = "option-btn";
-                  if (isSelected) optionClass += " selected";
-                  if (isSubmitted) {
-                    if (option === q.correctAnswer) optionClass += " correct-answer";
-                    else if (isSelected && option !== q.correctAnswer) optionClass += " wrong-answer";
-                  }
+              {/* MCQ: option buttons */}
+              {q.type === 'mcq' && (
+                <div className="options-grid">
+                  {(q.options || []).map((option, i) => {
+                    const isSelected = userAnswers[q._id] === option;
+                    let optionClass = "option-btn";
+                    if (isSelected) optionClass += " selected";
+                    if (isSubmitted) {
+                      if (option.toLowerCase() === correctAns) optionClass += " correct-answer";
+                      else if (isSelected && option.toLowerCase() !== correctAns) optionClass += " wrong-answer";
+                    }
+                    return (
+                      <button key={i} className={optionClass}
+                        onClick={() => handleAnswerChange(q._id, option)}
+                        disabled={isSubmitted}>
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
-                  return (
-                    <button
-                      key={i}
-                      className={optionClass}
-                      onClick={() => handleOptionSelect(q._id, option)}
-                      disabled={isSubmitted}
-                    >
-                      {option}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              {isSubmitted && (
+              {/* True/False: two buttons */}
+              {q.type === 'truefalse' && (
+                <div className="options-grid">
+                  {['True', 'False'].map((option) => {
+                    const isSelected = userAnswers[q._id] === option;
+                    let optionClass = "option-btn";
+                    if (isSelected) optionClass += " selected";
+                    if (isSubmitted) {
+                      if (option.toLowerCase() === correctAns) optionClass += " correct-answer";
+                      else if (isSelected && option.toLowerCase() !== correctAns) optionClass += " wrong-answer";
+                    }
+                    return (
+                      <button key={option} className={optionClass}
+                        onClick={() => handleAnswerChange(q._id, option)}
+                        disabled={isSubmitted}
+                        style={{minWidth: '120px'}}>
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Fill in the blank: text input */}
+              {q.type === 'fillblank' && (
+                <div style={{margin: '10px 0'}}>
+                  <input
+                    type="text"
+                    placeholder="Type your answer here..."
+                    value={userAnswers[q._id] || ''}
+                    onChange={(e) => handleAnswerChange(q._id, e.target.value)}
+                    disabled={isSubmitted}
+                    style={{
+                      width: '100%', padding: '12px', borderRadius: '8px',
+                      border: isSubmitted ? (isCorrect ? '2px solid #22c55e' : '2px solid #ef4444') : '1px solid #ccc',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Short answer: small textarea */}
+              {q.type === 'short' && (
+                <div style={{margin: '10px 0'}}>
+                  <textarea
+                    placeholder="Write a brief answer..."
+                    rows={3}
+                    value={userAnswers[q._id] || ''}
+                    onChange={(e) => handleAnswerChange(q._id, e.target.value)}
+                    disabled={isSubmitted}
+                    style={{
+                      width: '100%', padding: '12px', borderRadius: '8px',
+                      border: '1px solid #ccc', fontSize: '1rem', resize: 'vertical'
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Essay: large textarea */}
+              {q.type === 'essay' && (
+                <div style={{margin: '10px 0'}}>
+                  <textarea
+                    placeholder="Write your detailed answer..."
+                    rows={6}
+                    value={userAnswers[q._id] || ''}
+                    onChange={(e) => handleAnswerChange(q._id, e.target.value)}
+                    disabled={isSubmitted}
+                    style={{
+                      width: '100%', padding: '12px', borderRadius: '8px',
+                      border: '1px solid #ccc', fontSize: '1rem', resize: 'vertical'
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Feedback after submission */}
+              {isSubmitted && isAutoEval(q.type) && (
                 <div className="feedback-msg">
                   {isCorrect ? (
                     <span className="text-green">✅ Correct! (+{q.marks})</span>
                   ) : (
                     <span className="text-red">❌ Correct Answer: {q.correctAnswer}</span>
                   )}
+                </div>
+              )}
+
+              {isSubmitted && !isAutoEval(q.type) && (
+                <div className="feedback-msg">
+                  <span style={{color:'#7b2cbf'}}>⏳ Will be reviewed by your teacher</span>
                 </div>
               )}
             </div>
@@ -176,14 +263,17 @@ function SubmitAssignment() {
           <button 
             className="submit-final-btn" 
             onClick={handleSubmit}
-            // Optional: Keep disabled check if you want to force answering all Qs
-            // disabled={Object.keys(userAnswers).length !== assignment.questions.length}
           >
             Submit Assignment
           </button>
         ) : (
           <div className="result-summary">
-            <h3>Final Score: {score} / {assignment.totalMarks}</h3>
+            <h3>Auto-Evaluated Score: {score} / {assignment.totalMarks}</h3>
+            {hasManual && (
+              <p style={{color:'#7b2cbf', marginTop:'8px', fontSize:'0.95rem'}}>
+                📝 Some answers require teacher review. Your final score may change.
+              </p>
+            )}
             <button className="close-btn" onClick={() => navigate('../my-submissions')}>
               Exit Quiz
             </button>

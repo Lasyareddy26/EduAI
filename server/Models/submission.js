@@ -13,21 +13,41 @@ const submissionSchema = new mongoose.Schema({
     required: true
   },
 
-  // ✅ FIX 1: Change 'Map' to 'Array' (matches your frontend payload)
   answers: [
     {
       questionId: String,
-      answer: String
+      answer: String,
+      isCorrect: { type: Boolean, default: null },    // null = not evaluated yet
+      marksAwarded: { type: Number, default: 0 },
+      teacherComment: { type: String, default: "" }
     }
   ],
 
-  // ✅ FIX 2: Rename 'score' to 'finalScore' (matches your frontend payload)
-  finalScore: {
+  // Auto-evaluated score (MCQ + T/F + FillBlank)
+  autoScore: {
     type: Number,
-    required: true
+    default: 0
   },
 
-  // Optional fields
+  // Teacher-graded score (Short + Essay)
+  manualScore: {
+    type: Number,
+    default: 0
+  },
+
+  // Combined final score
+  finalScore: {
+    type: Number,
+    default: 0
+  },
+
+  // Whether manual grading is needed
+  evaluationStatus: {
+    type: String,
+    enum: ["auto-complete", "pending-review", "reviewed"],
+    default: "auto-complete"
+  },
+
   aiFeedback: String,
   teacherFeedback: String,
   

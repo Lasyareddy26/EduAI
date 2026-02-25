@@ -17,9 +17,11 @@ import SubmitAssignment from "./components/student/SubmitAssignment";
 import StudentList from "./components/teacher/StudentList";
 import StudentAssignments from "./components/student/StudentAssignments";
 import StudentLearningPath from "./components/student/StudentLearningPath";
+import StudentDashboard from "./components/student/StudentDashboard";
 
 // Teacher Components
 import TeacherProfile from "./components/teacher/TeacherProfile";
+import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import CreateAssignment from "./components/teacher/CreateAssignment";
 import AssignmentSubmissions from "./components/teacher/AssignmentSubmissions";
 import StudentAnalytics from "./components/teacher/StudentAnalytics";
@@ -49,6 +51,11 @@ function App() {
           path: "student-profile/:email",
           element: <Studentprofile />,
           children: [
+            // INDEX ROUTE: Dashboard shown when no sub-route is active
+            {
+              index: true,
+              element: <StudentDashboard />,
+            },
             // Matches: GET /assignments
             {
               path: "assignments",
@@ -85,6 +92,11 @@ function App() {
           path: "teacher-profile/:email",
           element: <TeacherProfile />,
           children: [
+            // INDEX ROUTE: Dashboard shown when no sub-route is active
+            {
+              index: true,
+              element: <TeacherDashboard />,
+            },
             // Matches: GET /assignments (Teacher view)
             {
               path: "assignments",

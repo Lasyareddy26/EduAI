@@ -80,7 +80,7 @@ studentApp.get("/assignment/:id", (req, res) => {
     .catch(err => res.status(500).send({ message: "Error", payload: err.message }));
 });
 
-// ✅ STUDENT → SUBMIT ASSIGNMENT & TRIGGER ML
+// ✅ STUDENT → SUBMIT ASSIGNMENT & TRIGGER ML (supports all question types)
 studentApp.post("/submit-assignment", async (req, res) => {
   const submissionData = req.body;
   
@@ -93,15 +93,55 @@ studentApp.post("/submit-assignment", async (req, res) => {
       return res.status(404).send({ message: "Assignment not found. Cannot submit." });
     }
 
-    // 2. Save Submission to MongoDB
-    const newSubmission = await submissionModel.create(submissionData);
+    // 2. Auto-evaluate each answer
+    let autoScore = 0;
+    let manualScore = 0;
+    let hasManualQuestions = false;
+
+    const evaluatedAnswers = (submissionData.answers || []).map(ans => {
+      const question = assignment.questions.find(q => q._id.toString() === ans.questionId);
+      if (!question) {
+        return { ...ans, isCorrect: null, marksAwarded: 0 };
+      }
+
+      const qType = question.type;
+      const studentAnswer = (ans.answer || "").trim().toLowerCase();
+      const correctAnswer = (question.correctAnswer || "").trim().toLowerCase();
+
+      // Auto-evaluate: mcq, truefalse, fillblank
+      if (qType === "mcq" || qType === "truefalse" || qType === "fillblank") {
+        const isCorrect = studentAnswer === correctAnswer;
+        const marksAwarded = isCorrect ? (question.marks || 1) : 0;
+        autoScore += marksAwarded;
+        return { ...ans, isCorrect, marksAwarded };
+      }
+
+      // Manual evaluation needed: short, essay
+      hasManualQuestions = true;
+      return { ...ans, isCorrect: null, marksAwarded: 0, teacherComment: "" };
+    });
+
+    const evaluationStatus = hasManualQuestions ? "pending-review" : "auto-complete";
+    const finalScore = autoScore; // Will be updated when teacher reviews manual answers
+
+    // 3. Save Submission to MongoDB
+    const newSubmission = await submissionModel.create({
+      assignmentId: submissionData.assignmentId,
+      studentId: submissionData.studentId,
+      answers: evaluatedAnswers,
+      autoScore,
+      manualScore: 0,
+      finalScore,
+      evaluationStatus,
+      status: "submitted"
+    });
     console.log(`✅ Submission Saved for ${assignment.title}:`, newSubmission._id);
 
-    // 3. Call Python ML Service using the specific assignment's context
+    // 4. Call Python ML Service using the specific assignment's context
     const mlPayload = {
       subject: assignment.subject,
-      topic: assignment.title, // Use title for quiz-specific identification
-      score: submissionData.finalScore,
+      topic: assignment.title,
+      score: finalScore,
       total_marks: assignment.totalMarks
     };
 

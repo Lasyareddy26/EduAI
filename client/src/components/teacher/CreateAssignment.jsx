@@ -28,7 +28,7 @@ function CreateAssignment() {
   })
 
   const [questions, setQuestions] = useState([
-    { questionText: '', type: 'short', marks: 0, options: [''], correctAnswer: '' }
+    { questionText: '', type: 'mcq', marks: 1, options: ['', '', '', ''], correctAnswer: '' }
   ])
 
   const totalMarks = questions.reduce((acc, q) => acc + Number(q.marks || 0), 0)
@@ -112,7 +112,7 @@ function CreateAssignment() {
   }
 
   const addQuestion = () => {
-    setQuestions([...questions, { questionText: '', type: 'short', marks: 0, options: [''], correctAnswer: '' }])
+    setQuestions([...questions, { questionText: '', type: 'mcq', marks: 1, options: ['', '', '', ''], correctAnswer: '' }])
   }
 
   const removeQuestion = (index) => {
@@ -151,11 +151,25 @@ function CreateAssignment() {
       totalMarks: totalMarks,
       deadline: basicInfo.deadline,
       questions: questions.map(q => {
-        if (q.type !== 'mcq') {
-          const { options, correctAnswer, ...rest } = q
-          return rest
+        // For True/False, ensure options are set
+        if (q.type === 'truefalse') {
+          return { ...q, options: ['True', 'False'], autoEvaluate: true }
         }
-        return q
+        
+        // For MCQ, keep options and correctAnswer
+        if (q.type === 'mcq') {
+          return { ...q, autoEvaluate: true }
+        }
+        
+        // For Fill in the Blank, keep correctAnswer but remove options
+        if (q.type === 'fillblank') {
+          const { options, ...rest } = q
+          return { ...rest, autoEvaluate: true }
+        }
+        
+        // For short/essay, remove options and correctAnswer (manual eval)
+        const { options, correctAnswer, ...rest } = q
+        return { ...rest, autoEvaluate: false }
       })
     }
 
@@ -279,9 +293,11 @@ function CreateAssignment() {
                 <div className="input-group small-width">
                   <label>Type</label>
                   <select value={q.type} onChange={(e) => handleQuestionChange(qIndex, 'type', e.target.value)}>
+                    <option value="mcq">Multiple Choice</option>
+                    <option value="truefalse">True / False</option>
+                    <option value="fillblank">Fill in the Blank</option>
                     <option value="short">Short Answer</option>
                     <option value="essay">Essay</option>
-                    <option value="mcq">Multiple Choice</option>
                   </select>
                 </div>
                 <div className="input-group small-width">
@@ -292,18 +308,63 @@ function CreateAssignment() {
 
               {q.type === 'mcq' && (
                 <div className="mcq-section">
-                  <label>Options:</label>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} className="option-row">
-                      <div className={`radio-circle ${q.correctAnswer === opt && opt !== '' ? 'selected' : ''}`}></div>
-                      <input type="text" value={opt} onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)} required />
-                      {q.options.length > 2 && <button type="button" className="text-danger" onClick={() => removeOption(qIndex, oIndex)}>Remove</button>}
-                    </div>
-                  ))}
+                  <label className="mcq-section-label">Options:</label>
+                  <div className="options-list">
+                    {q.options.map((opt, oIndex) => (
+                      <div key={oIndex} className={`option-row ${q.correctAnswer === opt && opt !== '' ? 'is-correct' : ''}`}>
+                        <span className="option-letter">{String.fromCharCode(65 + oIndex)}</span>
+                        <div
+                          className={`radio-circle ${q.correctAnswer === opt && opt !== '' ? 'selected' : ''}`}
+                          onClick={() => handleQuestionChange(qIndex, 'correctAnswer', opt)}
+                          title="Click to set as correct answer"
+                        ></div>
+                        <input type="text" value={opt} placeholder={`Option ${String.fromCharCode(65 + oIndex)}`} onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)} required />
+                        {q.options.length > 2 && (
+                          <button type="button" className="remove-opt-btn" onClick={() => removeOption(qIndex, oIndex)}>✕ Remove</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                   <button type="button" className="add-opt-btn" onClick={() => addOption(qIndex)}>+ Add Option</button>
-                  <div className="input-group mt-2">
-                    <label>Correct Answer</label>
-                    <input type="text" value={q.correctAnswer} onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)} required />
+                  <div className="correct-answer-field">
+                    <label>✅ Correct Answer</label>
+                    <input type="text" value={q.correctAnswer} onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)} required placeholder="Must match one of the options exactly" />
+                  </div>
+                </div>
+              )}
+
+              {q.type === 'truefalse' && (
+                <div className="mcq-section">
+                  <label className="mcq-section-label">Select the Correct Answer:</label>
+                  <div className="tf-options">
+                    <label className={`tf-option ${q.correctAnswer === 'True' ? 'tf-selected-true' : ''}`}>
+                      <input type="radio" name={`tf-${qIndex}`} checked={q.correctAnswer === 'True'} onChange={() => handleQuestionChange(qIndex, 'correctAnswer', 'True')} />
+                      ✅ True
+                    </label>
+                    <label className={`tf-option ${q.correctAnswer === 'False' ? 'tf-selected-false' : ''}`}>
+                      <input type="radio" name={`tf-${qIndex}`} checked={q.correctAnswer === 'False'} onChange={() => handleQuestionChange(qIndex, 'correctAnswer', 'False')} />
+                      ❌ False
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {q.type === 'fillblank' && (
+                <div className="mcq-section">
+                  <div className="fillblank-info">
+                    💡 Use <strong>&nbsp;___&nbsp;</strong> in the question text to indicate the blank.
+                  </div>
+                  <div className="correct-answer-field">
+                    <label>✅ Correct Answer (for auto-evaluation)</label>
+                    <input type="text" value={q.correctAnswer} onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)} required placeholder="e.g. Photosynthesis" />
+                  </div>
+                </div>
+              )}
+
+              {(q.type === 'short' || q.type === 'essay') && (
+                <div className="mcq-section">
+                  <div className="manual-eval-info">
+                    📝 {q.type === 'short' ? 'Short answer' : 'Essay'} questions will be manually graded by the teacher.
                   </div>
                 </div>
               )}

@@ -31,6 +31,20 @@ function TeacherProfile() {
 
         {/* Navigation Menu */}
         <nav className="teacher-nav-menu">
+          <p className="teacher-nav-label">OVERVIEW</p>
+
+          {/* Dashboard */}
+          <NavLink 
+            to="" 
+            end
+            className={({ isActive }) => isActive ? "teacher-nav-item active" : "teacher-nav-item"}
+          >
+            <span className="teacher-nav-icon">🏠</span>
+            <span className="teacher-nav-text">Dashboard</span>
+          </NavLink>
+
+          <div className="teacher-nav-divider"></div>
+
           <p className="teacher-nav-label">CLASSROOM</p>
           
           {/* 1. Create Assignment */}
