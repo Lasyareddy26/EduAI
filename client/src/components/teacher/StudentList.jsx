@@ -71,7 +71,7 @@ function StudentList() {
               </p>
 
               <button 
-                onClick={() => navigate(`../student-analytics/${student.email}`)}
+                onClick={() => navigate(`../student-analytics/${student._id}`)}
                 style={{
                   background: '#240046',
                   color: 'white',

@@ -1,23 +1,58 @@
 const mongoose = require("mongoose")
 
+const roadmapNodeSchema = new mongoose.Schema({
+  step: Number,
+  title: String,
+  description: String,
+  status: {
+    type: String,
+    enum: ["completed", "current", "upcoming"],
+    default: "upcoming"
+  }
+}, { _id: false })
+
+const resourceSchema = new mongoose.Schema({
+  title: String,
+  type: { type: String },       // article, video, quiz, practice, project
+  url: { type: String, default: "#" },
+  duration: String
+}, { _id: false })
+
 const learningPathSchema = new mongoose.Schema({
   studentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "studentteacher",
     required: true
   },
 
-  weakTopics: [String],
-  recommendedTopics: [String],
+  subject: {
+    type: String,
+    required: true
+  },
+
+  topic: {
+    type: String,
+    required: true
+  },
+
+  scorePercentage: Number,
 
   difficultyLevel: {
     type: String,
     enum: ["beginner", "intermediate", "advanced"]
   },
 
+  roadmap: [roadmapNodeSchema],
+
+  resources: [resourceSchema],
+
+  tip: String,
+
+  aiMessage: String,
+
   generatedBy: {
-    type: String, // ML model version
-    default: "v1"
+    type: String,
+    default: "ml-v2-decision-tree"
   },
 
   createdAt: {
@@ -25,5 +60,9 @@ const learningPathSchema = new mongoose.Schema({
     default: Date.now
   }
 })
-const learningModel=mongoose.model("learningpath",learningPathSchema)
-module.exports=learningModel
+
+// Compound index: one path per student per topic (latest wins)
+learningPathSchema.index({ studentId: 1, topic: 1 })
+
+const learningModel = mongoose.model("learningpath", learningPathSchema)
+module.exports = learningModel

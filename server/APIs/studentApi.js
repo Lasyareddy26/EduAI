@@ -55,12 +55,15 @@ studentApp.get("/my-submissions/:studentId", (req, res) => {
     .catch(err => res.status(500).send({ message: "Error", payload: err.message }))
 })
 
-// STUDENT → VIEW AI LEARNING PATH
-studentApp.get("/learning-path/:studentId", (req, res) => {
-  learningModel.findOne({ studentId: req.params.studentId })
-    .sort({ createdAt: -1 }) 
-    .then(path => res.send({ message: "Learning path fetched", payload: path }))
-    .catch(err => res.status(500).send({ message: "Error", payload: err.message }))
+// STUDENT → VIEW AI LEARNING PATHS (all topics)
+studentApp.get("/learning-path/:studentId", async (req, res) => {
+  try {
+    const paths = await learningModel.find({ studentId: req.params.studentId })
+      .sort({ createdAt: -1 })
+    res.send({ message: "Learning paths fetched", payload: paths })
+  } catch (err) {
+    res.status(500).send({ message: "Error", payload: err.message })
+  }
 })
 
 // STUDENT → VIEW RESOURCES
@@ -153,17 +156,25 @@ studentApp.post("/submit-assignment", async (req, res) => {
 
       console.log("🤖 AI Prediction:", mlResult.predicted_difficulty);
 
-      // 4. Save Learning Path linked to the student
-      const newPath = new learningModel({
-        studentId: submissionData.studentId,
-        weakTopics: [], 
-        recommendedTopics: mlResult.recommended_resources,
-        difficultyLevel: mlResult.predicted_difficulty,
-        generatedBy: "ml-v1-decision-tree"
-      });
-      
-      await newPath.save();
-      console.log("✅ ML Learning Path Generated & Saved");
+      // Upsert: update if same student+topic exists, else create new
+      await learningModel.findOneAndUpdate(
+        { studentId: submissionData.studentId, topic: mlResult.topic },
+        {
+          studentId: submissionData.studentId,
+          subject: mlResult.subject,
+          topic: mlResult.topic,
+          scorePercentage: mlResult.score_percentage,
+          difficultyLevel: mlResult.predicted_difficulty,
+          roadmap: mlResult.roadmap || [],
+          resources: mlResult.resources || [],
+          tip: mlResult.tip || "",
+          aiMessage: mlResult.ai_message || "",
+          generatedBy: "ml-v2-decision-tree",
+          createdAt: new Date()
+        },
+        { upsert: true, new: true }
+      );
+      console.log("✅ ML Learning Path Generated & Saved for topic:", mlResult.topic);
 
     } catch (mlErr) {
       console.error("⚠️ ML Service Warning:", mlErr.message);

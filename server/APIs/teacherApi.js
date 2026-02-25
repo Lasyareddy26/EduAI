@@ -281,15 +281,15 @@ teacherApp.put("/grade-submission/:submissionId", async (req, res) => {
   }
 })
 
-// TEACHER → VIEW AI LEARNING PATH OF STUDENT
-teacherApp.get("/ai-suggestion/:studentId", (req, res) => {
-  learningModel.find({ studentId: req.params.studentId })
-    .then(path =>
-      res.send({ message: "AI suggestions fetched", payload: path })
-    )
-    .catch(err =>
-      res.status(500).send({ message: "Error", payload: err.message })
-    )
+// TEACHER → VIEW AI LEARNING PATHS OF A STUDENT (all topics)
+teacherApp.get("/ai-suggestion/:studentId", async (req, res) => {
+  try {
+    const paths = await learningModel.find({ studentId: req.params.studentId })
+      .sort({ createdAt: -1 })
+    res.send({ message: "AI suggestions fetched", payload: paths })
+  } catch (err) {
+    res.status(500).send({ message: "Error", payload: err.message })
+  }
 })
 
 // server/APIs/teacherApi.js
