@@ -2,6 +2,24 @@ const exp = require("express")
 const teacherApp = exp.Router()
 teacherApp.use(exp.json())
 
+const multer = require("multer")
+const axios = require("axios")
+const FormData = require("form-data")
+const fs = require("fs")
+const path = require("path")
+
+// Multer config for PDF uploads
+const upload = multer({
+  dest: path.join(__dirname, "../uploads/"),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") cb(null, true)
+    else cb(new Error("Only PDF files allowed"), false)
+  },
+  limits: { fileSize: 20 * 1024 * 1024 } // 20MB max
+})
+
+const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:5001"
+
 const assignmentModel = require("../Models/Assignment")
 const submissionModel = require("../Models/submission")
 const learningModel = require("../Models/LearningPath")
@@ -130,6 +148,61 @@ teacherApp.post("/generate-questions", async (req, res) => {
 });
 
 
+// 📄 RAG ROUTE: UPLOAD PDF TO RAG SERVICE
+teacherApp.post("/upload-pdf", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).send({ message: "No PDF file provided" });
+    }
+
+    // Forward the file to the Python RAG service
+    const formData = new FormData();
+    const filePath = req.file.path;
+    formData.append("file", fs.createReadStream(filePath), {
+      filename: req.file.originalname,
+      contentType: "application/pdf"
+    });
+
+    const ragRes = await axios.post(`${RAG_SERVICE_URL}/upload`, formData, {
+      headers: formData.getHeaders()
+    });
+
+    // Clean up the temp file
+    fs.unlinkSync(filePath);
+
+    res.send(ragRes.data);
+  } catch (err) {
+    console.error("RAG Upload Error:", err?.response?.data || err.message);
+    res.status(500).send({
+      message: "PDF upload failed",
+      payload: err?.response?.data?.message || err.message
+    });
+  }
+});
+
+// 📄 RAG ROUTE: GENERATE QUESTIONS FROM UPLOADED PDF
+teacherApp.post("/rag-generate-questions", async (req, res) => {
+  try {
+    const { session_id, topic, count, question_type } = req.body;
+
+    const ragRes = await axios.post(`${RAG_SERVICE_URL}/generate`, {
+      session_id,
+      topic,
+      count: Number(count) || 5,
+      question_type
+    });
+
+    res.send(ragRes.data);
+  } catch (err) {
+    console.error("RAG Generate Error:", err?.response?.data || err.message);
+    res.status(500).send({
+      message: "RAG question generation failed",
+      payload: err?.response?.data?.message || err.message
+    });
+  }
+});
+
+
 // TEACHER → GET ALL STUDENTS
 teacherApp.get("/students", (req, res) => {
   studentTeacherModel.find({ role: "student" }) // Find all users with role 'student'
@@ -229,6 +302,40 @@ teacherApp.get("/teacher-by-email/:email", (req, res) => {
     .catch(err => {
       res.status(500).send({ message: "Error fetching user", payload: err.message });
     });
+});
+
+// RAG PROXY ROUTE: PDF UPLOAD AND QUESTION GENERATION
+teacherApp.post("/proxy/generate-pdf-questions", upload.single("file"), async (req, res) => {
+  try {
+    const { subject, topic, count } = req.body;
+
+    // 1. Read the PDF file
+    const filePath = req.file.path;
+    const fileBuffer = fs.readFileSync(filePath);
+
+    // 2. Prepare form data for the RAG service
+    const formData = new FormData();
+    formData.append("file", fileBuffer, { filename: req.file.originalname });
+    formData.append("subject", subject);
+    formData.append("topic", topic);
+    formData.append("count", count || 5);
+
+    // 3. Call the RAG service
+    const response = await axios.post(`${RAG_SERVICE_URL}/generate-questions`, formData, {
+      headers: {
+        ...formData.getHeaders(),
+      },
+    });
+
+    // 4. Handle the RAG service response
+    const questions = response.data.questions;
+
+    res.send({ message: "Questions generated from PDF", payload: questions });
+
+  } catch (err) {
+    console.error("RAG Service Error:", err);
+    res.status(500).send({ message: "PDF Processing Failed", payload: err.message });
+  }
 });
 
 module.exports = teacherApp

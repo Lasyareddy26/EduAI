@@ -12,6 +12,10 @@ __pycache__/
 venv/
 .venv/
 
+# RAG service
+rag_service/uploads/
+rag_service/db/
+
 # OS files
 .DS_Store
 Thumbs.db

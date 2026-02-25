@@ -8,7 +8,8 @@ EduAI is a full-stack education platform that uses AI to personalize learning pa
 EduAI/
 ├── client/          → React frontend (Vite + React 19)
 ├── server/          → Express.js backend (Node.js + MongoDB)
-└── ml_service/      → Python ML microservice (FastAPI + scikit-learn)
+├── ml_service/      → Python ML microservice (FastAPI + scikit-learn)
+└── rag_service/     → Python RAG microservice (Flask + LangChain + ChromaDB)
 ```
 
 ---
@@ -155,15 +156,60 @@ The ML API will be available at **http://localhost:8000**
 
 ---
 
+### 5. Set Up the RAG Service (Question Generator from PDFs)
+
+Open a **new terminal** and run:
+
+```bash
+cd rag_service
+```
+
+(Optional but recommended) Create a virtual environment:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate        # macOS/Linux
+# venv\Scripts\activate         # Windows
+```
+
+Install Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Create a `.env` file inside the `rag_service/` folder:
+
+```bash
+touch .env
+```
+
+Add the following to `rag_service/.env`:
+
+```env
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+Start the RAG service:
+
+```bash
+python3 app.py
+```
+
+The RAG service will be available at **http://localhost:5001**
+
+---
+
 ## 🏃 Running Everything Together
 
-You need **3 terminals** running simultaneously:
+You need **4 terminals** running simultaneously:
 
 | Terminal | Directory | Command |
 |----------|-----------|---------|
 | Terminal 1 | `server/` | `node server.js` |
 | Terminal 2 | `client/` | `npm run dev` |
 | Terminal 3 | `ml_service/` | `uvicorn main:app --reload --port 8000` |
+| Terminal 4 | `rag_service/` | `python3 app.py` |
 
 ---
 
@@ -175,11 +221,17 @@ PORT=4000
 DBURL=your_mongodb_connection_string
 GROQ_API_KEY=your_groq_api_key
 GEMINI_API_KEY=your_gemini_api_key
+RAG_SERVICE_URL=http://localhost:5001
 ```
 
 ### `client/.env`
 ```env
 VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+```
+
+### `rag_service/.env`
+```env
+GROQ_API_KEY=your_groq_api_key
 ```
 
 > ⚠️ **Never commit `.env` files to GitHub.** They are already in `.gitignore`.
@@ -192,6 +244,7 @@ VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 |-------|------------|
 | Frontend | React 19, Vite, React Router, Bootstrap, Clerk Auth |
 | Backend | Express.js, Mongoose, Groq SDK, Google Generative AI |
+| RAG Service | Flask, LangChain, ChromaDB, HuggingFace Embeddings, Groq |
 | ML Service | FastAPI, scikit-learn, joblib |
 | Database | MongoDB Atlas |
 | Auth | Clerk |

@@ -11,6 +11,14 @@ function CreateAssignment() {
  
   const [isGenerating, setIsGenerating] = useState(false)
 
+  // RAG states
+  const [pdfFile, setPdfFile] = useState(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [ragSessionId, setRagSessionId] = useState(null)
+  const [uploadedFileName, setUploadedFileName] = useState('')
+  const [ragQuestionType, setRagQuestionType] = useState('Multiple Choice')
+  const [ragCount, setRagCount] = useState(5)
+
   const [basicInfo, setBasicInfo] = useState({
     title: '',
     subject: '',
@@ -25,24 +33,65 @@ function CreateAssignment() {
 
   const totalMarks = questions.reduce((acc, q) => acc + Number(q.marks || 0), 0)
 
-  // --- AI GENERATION HANDLER ---
+  // --- PDF UPLOAD HANDLER ---
+  const handlePdfUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      alert('Please upload a PDF file')
+      return
+    }
+    setPdfFile(file)
+    setIsUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await axios.post('http://localhost:3000/teacher-api/upload-pdf', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+
+      setRagSessionId(res.data.session_id)
+      setUploadedFileName(res.data.filename)
+      alert(`✅ PDF "${res.data.filename}" uploaded and processed!`)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to upload PDF. Make sure the RAG service is running.')
+      setPdfFile(null)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  // --- RAG AI GENERATION HANDLER ---
   const handleAIGenerate = async () => {
-    if (!basicInfo.subject || !basicInfo.topic) {
-      alert("Please enter a Subject and Topic first!")
+    if (!ragSessionId) {
+      alert("Please upload a PDF first!")
+      return
+    }
+    if (!basicInfo.topic) {
+      alert("Please enter a Topic first!")
       return
     }
 
     setIsGenerating(true)
     try {
-      const res = await axios.post('http://localhost:3000/teacher-api/generate-questions', {
-        subject: basicInfo.subject,
+      const res = await axios.post('http://localhost:3000/teacher-api/rag-generate-questions', {
+        session_id: ragSessionId,
         topic: basicInfo.topic,
-        count: 5 // Default generating 5 questions
+        count: ragCount,
+        question_type: ragQuestionType
       })
 
-      // Append generated questions to existing ones (or replace if you prefer)
-      setQuestions([...questions, ...res.data.payload])
-      
+      const generated = res.data.payload
+      if (Array.isArray(generated)) {
+        setQuestions([...questions, ...generated])
+      } else {
+        alert("AI returned text instead of structured questions. Check the console.")
+        console.log("RAG response:", generated)
+      }
+
     } catch (err) {
       console.error(err)
       alert("Failed to generate questions. Try again.")
@@ -158,7 +207,44 @@ function CreateAssignment() {
           </div>
         </div>
 
-        {/* SECTION 2: QUESTIONS BUILDER */}
+        {/* SECTION 2: RAG - PDF UPLOAD & AI CONFIG */}
+        <div className="form-section">
+          <h3>📄 AI Question Generator (RAG)</h3>
+          <p style={{color:'#666', marginBottom:'15px', marginTop:'-10px'}}>Upload a PDF, select options, then generate questions from it.</p>
+
+          <div className="input-grid">
+            <div className="input-group">
+              <label>Upload PDF</label>
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handlePdfUpload}
+                disabled={isUploading}
+                style={{padding:'10px', border:'1px dashed #9d4edd', borderRadius:'8px', background:'#f8f5fc', cursor:'pointer'}}
+              />
+              {isUploading && <span style={{color:'#7b2cbf', fontSize:'0.85rem'}}>⏳ Processing PDF...</span>}
+              {uploadedFileName && !isUploading && <span style={{color:'#2d8a4e', fontSize:'0.85rem'}}>✅ {uploadedFileName} ready</span>}
+            </div>
+
+            <div className="input-group">
+              <label>Question Type</label>
+              <select value={ragQuestionType} onChange={(e) => setRagQuestionType(e.target.value)}>
+                <option value="Multiple Choice">Multiple Choice (MCQ)</option>
+                <option value="Short Answer">Short Answer</option>
+                <option value="True/False">True / False</option>
+                <option value="Essay">Essay</option>
+                <option value="Fill in the Blanks">Fill in the Blanks</option>
+              </select>
+            </div>
+
+            <div className="input-group">
+              <label>Number of Questions</label>
+              <input type="number" min="1" max="20" value={ragCount} onChange={(e) => setRagCount(e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 3: QUESTIONS BUILDER */}
         <div className="form-section">
           <div className="section-header">
              <h3>Questions</h3>
@@ -169,9 +255,10 @@ function CreateAssignment() {
                   type="button" 
                   className={`ai-btn ${isGenerating ? 'pulsing' : ''}`} 
                   onClick={handleAIGenerate}
-                  disabled={isGenerating}
+                  disabled={isGenerating || !ragSessionId}
+                  title={!ragSessionId ? 'Upload a PDF first' : ''}
                 >
-                  {isGenerating ? 'Generating...' : '✨ Auto-Generate with AI'}
+                  {isGenerating ? 'Generating...' : '✨ Generate from PDF'}
                 </button>
                 <span className="total-badge">Total Marks: {totalMarks}</span>
              </div>

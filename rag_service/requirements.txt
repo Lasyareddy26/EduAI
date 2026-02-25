@@ -1,0 +1,10 @@
+langchain
+langchain-community
+langchain-classic
+langchain-huggingface
+langchain-groq
+langchain-chroma
+pypdf
+python-dotenv
+flask
+flask-cors
