@@ -49,7 +49,7 @@ studentApp.get("/assignments", (req, res) => {
 // STUDENT → VIEW OWN SUBMISSIONS
 studentApp.get("/my-submissions/:studentId", (req, res) => {
   submissionModel.find({ studentId: req.params.studentId })
-    .populate("assignmentId", "title subject totalMarks") // Correctly populates the unique quiz title
+    .populate("assignmentId", "title topic subject totalMarks") // Correctly populates the unique quiz title
     .sort({ createdAt: -1 }) 
     .then(submissions => res.send({ message: "Submissions fetched", payload: submissions }))
     .catch(err => res.status(500).send({ message: "Error", payload: err.message }))
@@ -143,7 +143,7 @@ studentApp.post("/submit-assignment", async (req, res) => {
     // 4. Call Python ML Service using the specific assignment's context
     const mlPayload = {
       subject: assignment.subject,
-      topic: assignment.title,
+      topic: assignment.topic || assignment.title,
       score: finalScore,
       total_marks: assignment.totalMarks
     };
@@ -187,6 +187,173 @@ studentApp.post("/submit-assignment", async (req, res) => {
     res.status(400).send({ message: "Submission failed", payload: err.message });
   }
 });
+
+// STUDENT → REGENERATE LEARNING PATH (re-calls ML for a topic)
+studentApp.post("/regenerate-learning-path", async (req, res) => {
+  try {
+    const { studentId, subject, topic, scorePercentage } = req.body
+    if (!studentId || !subject || !topic) {
+      return res.status(400).send({ message: "Missing required fields" })
+    }
+
+    // Calculate score and totalMarks from percentage
+    const score = scorePercentage || 0
+    const totalMarks = 100
+
+    const mlPayload = {
+      subject,
+      topic,
+      score,
+      total_marks: totalMarks
+    }
+
+    console.log("🔄 Regenerating learning path for:", mlPayload)
+
+    const mlResponse = await axios.post('http://127.0.0.1:8000/predict-path', mlPayload)
+    const mlResult = mlResponse.data
+
+    const updated = await learningModel.findOneAndUpdate(
+      { studentId, topic },
+      {
+        studentId,
+        subject: mlResult.subject,
+        topic: mlResult.topic,
+        scorePercentage: mlResult.score_percentage,
+        difficultyLevel: mlResult.predicted_difficulty,
+        roadmap: mlResult.roadmap || [],
+        resources: mlResult.resources || [],
+        tip: mlResult.tip || "",
+        aiMessage: mlResult.ai_message || "",
+        generatedBy: "ml-v2-decision-tree",
+        createdAt: new Date()
+      },
+      { upsert: true, new: true }
+    )
+
+    console.log("✅ Learning path regenerated for topic:", topic)
+    res.send({ message: "Learning path regenerated", payload: updated })
+  } catch (err) {
+    console.error("❌ Regeneration error:", err.message)
+    res.status(500).send({ message: "Regeneration failed", payload: err.message })
+  }
+})
+
+// STUDENT → TOGGLE ROADMAP STEP STATUS (mark as completed / undo)
+studentApp.put("/learning-path/:pathId/toggle-step/:stepIndex", async (req, res) => {
+  try {
+    const { pathId, stepIndex } = req.params
+    const idx = parseInt(stepIndex)
+
+    const path = await learningModel.findById(pathId)
+    if (!path) return res.status(404).send({ message: "Learning path not found" })
+    if (!path.roadmap || idx < 0 || idx >= path.roadmap.length) {
+      return res.status(400).send({ message: "Invalid step index" })
+    }
+
+    // Toggle: if completed → upcoming, else → completed
+    const currentStatus = path.roadmap[idx].status
+    path.roadmap[idx].status = currentStatus === "completed" ? "upcoming" : "completed"
+
+    // Auto-set "current" on the first non-completed step
+    let foundCurrent = false
+    for (let i = 0; i < path.roadmap.length; i++) {
+      if (path.roadmap[i].status !== "completed" && !foundCurrent) {
+        path.roadmap[i].status = "current"
+        foundCurrent = true
+      } else if (path.roadmap[i].status === "current" && foundCurrent) {
+        // Demote any extra "current" to "upcoming"
+        path.roadmap[i].status = "upcoming"
+      }
+    }
+
+    await path.save()
+    console.log(`✅ Step ${idx + 1} toggled for path: ${path.topic}`)
+    res.send({ message: "Step toggled", payload: path })
+  } catch (err) {
+    console.error("❌ Toggle step error:", err.message)
+    res.status(500).send({ message: "Toggle failed", payload: err.message })
+  }
+})
+
+// STUDENT → BULK REGENERATE ALL LEARNING PATHS FROM SUBMISSIONS
+studentApp.post("/regenerate-all-learning-paths/:studentId", async (req, res) => {
+  try {
+    const { studentId } = req.params
+    if (!studentId) {
+      return res.status(400).send({ message: "Missing studentId" })
+    }
+
+    // 1. Get all submissions for this student
+    const submissions = await submissionModel.find({ studentId })
+      .populate("assignmentId", "title topic subject totalMarks")
+      .sort({ createdAt: -1 })
+
+    if (!submissions || submissions.length === 0) {
+      return res.status(404).send({ message: "No submissions found for this student" })
+    }
+
+    // 2. Group by assignment topic (actual topic field), keep the latest/best score per topic
+    const topicMap = {}
+    for (const sub of submissions) {
+      const assignment = sub.assignmentId
+      if (!assignment) continue
+      const topic = assignment.topic || assignment.title
+      const subject = assignment.subject
+      const totalMarks = assignment.totalMarks || 1
+      const score = sub.finalScore || 0
+
+      // Keep the latest submission per topic
+      if (!topicMap[topic]) {
+        topicMap[topic] = { subject, topic, score, totalMarks }
+      }
+    }
+
+    // 3. Call ML for each topic and upsert learning paths
+    const results = []
+    for (const key of Object.keys(topicMap)) {
+      const { subject, topic, score, totalMarks } = topicMap[key]
+      const mlPayload = { subject, topic, score, total_marks: totalMarks }
+
+      try {
+        const mlResponse = await axios.post('http://127.0.0.1:8000/predict-path', mlPayload)
+        const mlResult = mlResponse.data
+
+        const updated = await learningModel.findOneAndUpdate(
+          { studentId, topic: mlResult.topic },
+          {
+            studentId,
+            subject: mlResult.subject,
+            topic: mlResult.topic,
+            scorePercentage: mlResult.score_percentage,
+            difficultyLevel: mlResult.predicted_difficulty,
+            roadmap: mlResult.roadmap || [],
+            resources: mlResult.resources || [],
+            tip: mlResult.tip || "",
+            aiMessage: mlResult.ai_message || "",
+            generatedBy: "ml-v2-decision-tree",
+            createdAt: new Date()
+          },
+          { upsert: true, new: true }
+        )
+        results.push(updated)
+        console.log(`✅ Learning path generated for: ${topic}`)
+      } catch (mlErr) {
+        console.error(`⚠️ ML failed for ${topic}:`, mlErr.message)
+      }
+    }
+
+    // 4. Delete any old-schema learning paths that don't have a topic field
+    await learningModel.deleteMany({ studentId, topic: { $exists: false } })
+    await learningModel.deleteMany({ studentId, topic: null })
+    await learningModel.deleteMany({ studentId, topic: "" })
+
+    console.log(`✅ Bulk regeneration complete: ${results.length} paths generated`)
+    res.send({ message: `${results.length} learning paths generated`, payload: results })
+  } catch (err) {
+    console.error("❌ Bulk regeneration error:", err.message)
+    res.status(500).send({ message: "Bulk regeneration failed", payload: err.message })
+  }
+})
 
 // GET USER BY EMAIL (For Clerk Sync)
 studentApp.get("/student-by-email/:email", (req, res) => {

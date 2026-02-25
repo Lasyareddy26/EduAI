@@ -1,6 +1,7 @@
 import React from 'react'
 import Header from './Header'
 import Footer from './Footer'
+import Chatbot from './Chatbot'
 import { Outlet } from 'react-router-dom'
 import './RootLayout.css';
 import { ClerkProvider } from '@clerk/clerk-react'
@@ -30,6 +31,7 @@ function RootLayout() {
         </main>
 
         <Footer />
+        <Chatbot />
       </div>
     </ClerkProvider>
   )

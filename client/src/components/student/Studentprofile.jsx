@@ -8,69 +8,69 @@ function StudentProfile() {
   const { email } = useParams() 
 
   return (
-    <div className="profile-dashboard">
+    <div className="student-dashboard-layout">
       
       {/* 1. SIDEBAR */}
-      <aside className="profile-sidebar">
+      <aside className="student-sidebar-container">
         
         {/* Profile Card */}
-        <div className="sidebar-profile-card">
-          <div className="profile-background-splash"></div>
-          <div className="profile-content-wrapper">
+        <div className="student-profile-card">
+          <div className="student-background-splash"></div>
+          <div className="student-content-wrapper">
             <img 
               src={users?.profileImageUrl || "https://via.placeholder.com/150"} 
               alt="Profile" 
-              className="sidebar-avatar"
+              className="student-avatar"
             />
             <h3>{users?.firstName || "Student"}</h3>
-            <p className="user-email">{users?.email || email}</p>
-            <span className="role-badge">🎓 Student Account</span>
+            <p className="student-email">{users?.email || email}</p>
+            <span className="student-role-badge">🎓 Student Account</span>
           </div>
         </div>
 
         {/* Navigation Menu */}
-        <nav className="sidebar-nav">
-          <p className="nav-label">OVERVIEW</p>
+        <nav className="student-nav-menu">
+          <p className="student-nav-label">OVERVIEW</p>
 
-          <NavLink to="" end className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            <span className="nav-icon">🏠</span>
-            <span className="nav-text">Dashboard</span>
+          <NavLink to="" end className={({ isActive }) => isActive ? "student-nav-item active" : "student-nav-item"}>
+            <span className="student-nav-icon">🏠</span>
+            <span className="student-nav-text">Dashboard</span>
           </NavLink>
 
-          <div className="nav-divider"></div>
+          <div className="student-nav-divider"></div>
 
-          <p className="nav-label">ACADEMIC</p>
+          <p className="student-nav-label">ACADEMIC</p>
           
-          <NavLink to="available-assignments" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            <span className="nav-icon">📚</span>
-            <span className="nav-text">Assignments</span>
+          <NavLink to="available-assignments" className={({ isActive }) => isActive ? "student-nav-item active" : "student-nav-item"}>
+            <span className="student-nav-icon">📚</span>
+            <span className="student-nav-text">Assignments</span>
           </NavLink>
 
-          <NavLink to="my-submissions" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            <span className="nav-icon">✅</span>
-            <span className="nav-text">My Submissions</span>
+          <NavLink to="my-submissions" className={({ isActive }) => isActive ? "student-nav-item active" : "student-nav-item"}>
+            <span className="student-nav-icon">✅</span>
+            <span className="student-nav-text">My Submissions</span>
           </NavLink>
 
-          <div className="nav-divider"></div>
+          <div className="student-nav-divider"></div>
 
-          <p className="nav-label">AI ASSISTANT</p>
+          <p className="student-nav-label">AI ASSISTANT</p>
 
-          <NavLink to="learning-path" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            <span className="nav-icon">🤖</span>
-            <span className="nav-text">AI Learning Path</span>
+          <NavLink to="learning-path" className={({ isActive }) => isActive ? "student-nav-item active" : "student-nav-item"}>
+            <span className="student-nav-icon">🤖</span>
+            <span className="student-nav-text">AI Learning Path</span>
           </NavLink>
 
-          <NavLink to="resources" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            <span className="nav-icon">🧠</span>
-            <span className="nav-text">Resources</span>
+          <NavLink to="resources" className={({ isActive }) => isActive ? "student-nav-item active" : "student-nav-item"}>
+            <span className="student-nav-icon">🧠</span>
+            <span className="student-nav-text">Resources</span>
           </NavLink>
 
         </nav>
       </aside>
 
       {/* 2. MAIN CONTENT AREA */}
-      <main className="profile-content">
-        <div className="content-container">
+      <main className="student-content-area">
+        <div className="student-content-container">
            <Outlet /> 
         </div>
       </main>

@@ -16,6 +16,8 @@ mongoose.connect(process.env.DBURL)
 .catch(err=>console.log(err))
 const studentApp = require('./APIs/studentApi')
 const teacherApp=require('./APIs/teacherApi')
+const chatbotApp = require('./APIs/chatbotApi')
 app.use("/student-api",studentApp)
 app.use("/teacher-api",teacherApp)
+app.use("/chatbot-api", chatbotApp)
 module.exports=app;

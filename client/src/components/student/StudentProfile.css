@@ -1,7 +1,7 @@
 /* src/components/student/StudentProfile.css */
 
 /* 1. Main Dashboard Layout */
-.profile-dashboard {
+.student-dashboard-layout {
   display: flex !important;
   height: calc(100vh - 70px) !important;
   background-color: #f8f9fc;
@@ -12,32 +12,36 @@
 }
 
 /* 2. Sidebar Styling */
-.profile-sidebar {
+.student-sidebar-container {
   width: 290px !important;
+  min-width: 290px !important;
   background: linear-gradient(180deg, #240046 0%, #10002b 100%) !important;
   color: white !important;
   display: flex !important;
   flex-direction: column !important;
   padding: 25px 20px !important;
   box-shadow: 4px 0 20px rgba(0,0,0,0.1);
-  flex-shrink: 0;
+  flex-shrink: 0 !important;
   z-index: 10;
+  overflow-y: auto;
 }
 
 /* 3. Glass Profile Card */
-.sidebar-profile-card {
+.student-profile-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 25px 15px;
-  text-align: center;
-  margin-bottom: 30px;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  padding: 25px 15px !important;
+  text-align: center !important;
+  margin-bottom: 30px !important;
   backdrop-filter: blur(10px);
   overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+  flex-shrink: 0;
 }
 
-.profile-background-splash {
+.student-background-splash {
   position: absolute;
   top: -50%;
   left: -50%;
@@ -45,78 +49,91 @@
   height: 200%;
   background: radial-gradient(circle, rgba(157,78,221,0.4) 0%, transparent 70%);
   z-index: 0;
+  pointer-events: none;
 }
 
-.profile-content-wrapper {
+.student-content-wrapper {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
 }
 
-.sidebar-avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 3px solid rgba(255,255,255,0.2);
-  margin-bottom: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  object-fit: cover;
+/* AVATAR — Force exact size to prevent Bootstrap or global styles from overriding */
+.student-avatar {
+  width: 80px !important;
+  height: 80px !important;
+  min-width: 80px !important;
+  min-height: 80px !important;
+  max-width: 80px !important;
+  max-height: 80px !important;
+  border-radius: 50% !important;
+  border: 3px solid rgba(255,255,255,0.2) !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+  object-fit: cover !important;
+  flex-shrink: 0 !important;
 }
 
-.sidebar-profile-card h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
+.student-profile-card h3 {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
   color: white !important;
+  line-height: 1.3 !important;
 }
 
-.user-email {
-  margin: 4px 0 12px;
-  font-size: 0.85rem;
+.student-email {
+  margin: 4px 0 12px !important;
+  padding: 0 !important;
+  font-size: 0.85rem !important;
   color: #e0e0e0 !important;
   word-break: break-all;
   opacity: 0.8;
+  line-height: 1.3 !important;
 }
 
-.role-badge {
-  background: linear-gradient(90deg, #ff9e00, #ffaa00);
-  color: #240046 !important;
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 6px 14px;
-  border-radius: 20px;
+.student-role-badge {
+  display: inline-block !important;
+  background: linear-gradient(90deg, #7b2cbf, #9d4edd) !important;
+  color: white !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  padding: 6px 14px !important;
+  border-radius: 20px !important;
   letter-spacing: 0.5px;
+  border: 1px solid rgba(255,255,255,0.3) !important;
 }
 
 /* 4. Navigation Menu */
-.sidebar-nav {
+.student-nav-menu {
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px; 
+  gap: 8px !important;
+  flex-shrink: 0;
 }
 
-.nav-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #9d4edd !important;
-  margin-top: 20px;
-  margin-bottom: 8px;
-  padding-left: 12px;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
+.student-nav-label {
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  color: #e0aaff !important;
+  margin-top: 20px !important;
+  margin-bottom: 8px !important;
+  padding-left: 12px !important;
+  letter-spacing: 1.2px !important;
+  text-transform: uppercase !important;
 }
 
-.nav-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.1);
-  margin: 15px 0;
+.student-nav-divider {
+  height: 1px !important;
+  background: rgba(255,255,255,0.1) !important;
+  margin: 15px 0 !important;
 }
 
-/* 5. NAVIGATION LINKS (CRITICAL FIX) */
-.nav-link {
-  /* Force Flex Row to keep Icon and Text side-by-side */
+/* 5. NAVIGATION LINKS */
+.student-nav-item {
   display: flex !important;           
   flex-direction: row !important;     
   align-items: center !important;     
@@ -126,63 +143,64 @@
   color: #d1d5db !important;          
   text-decoration: none !important;
   border-radius: 12px !important;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease !important;
   width: 100% !important;
-  border: 1px solid transparent;
-  background: transparent !important; /* Ensure default is clear */
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
 /* Icon Styling */
-.nav-icon {
+.student-nav-icon {
   font-size: 1.2rem !important;
   margin-right: 15px !important;
   display: flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  /* Ensure icon doesn't shrink */
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
   flex-shrink: 0 !important; 
 }
 
 /* Text Styling */
-.nav-text {
+.student-nav-text {
   font-size: 0.95rem !important;
   font-weight: 500 !important;
-  white-space: nowrap !important; /* Prevent text wrapping */
+  white-space: nowrap !important;
 }
 
 /* --- STATES --- */
 
 /* Hover State */
-.nav-link:hover {
+.student-nav-item:hover {
   background: rgba(255,255,255,0.1) !important;
   color: white !important;
   transform: translateX(5px); 
 }
 
 /* Active State (Selected) */
-.nav-link.active {
+.student-nav-item.active {
   background: white !important;       
   color: #240046 !important;          
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
   font-weight: 700 !important;
 }
 
 /* Ensure child elements inside active link inherit the purple color */
-.nav-link.active .nav-icon,
-.nav-link.active .nav-text {
+.student-nav-item.active .student-nav-icon,
+.student-nav-item.active .student-nav-text {
   color: #240046 !important;
 }
 
 /* 6. Main Content Area */
-.profile-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 30px;
+.student-content-area {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 30px !important;
 }
 
-.content-container {
+.student-content-container {
   max-width: 1000px;
   margin: 0 auto;
   width: 100%;
