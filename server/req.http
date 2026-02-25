@@ -1,0 +1,95 @@
+########################################
+### STUDENT / TEACHER AUTH (COMMON MODEL)
+########################################
+
+### Create Student
+POST http://localhost:3000/student-api/student
+Content-Type: application/json
+
+{
+  "role": "student",
+  "firstName": "Lasya",
+  "lastName": "Reddy",
+  "email": "lasya@student.com",
+  "profileImageUrl": "https://example.com/lasya.png"
+}
+
+###
+
+### Create Teacher
+POST http://localhost:3000/teacher-api/teacher
+Content-Type: application/json
+
+{
+  "role": "teacher",
+  "firstName": "Arjun",
+  "lastName": "Sir",
+  "email": "arjun@teacher.com",
+  "profileImageUrl": "https://example.com/arjun.png"
+}
+
+########################################
+### STUDENT APIs
+########################################
+
+### Student → View All Assignments
+GET http://localhost:3000/student-api/assignments
+
+###
+
+### Student → Submit Assignment
+POST http://localhost:3000/student-api/submit-assignment
+Content-Type: application/json
+
+{
+  "studentId": "PUT_STUDENT_OBJECT_ID_HERE",
+  "assignmentId": "PUT_ASSIGNMENT_OBJECT_ID_HERE",
+  "answers": [
+    {
+      "question": "Explain SDG 4",
+      "answer": "Quality education ensures inclusive learning."
+    }
+  ],
+  "submittedAt": "2026-01-19T10:30:00.000Z"
+}
+
+###
+
+### Student → View My Submissions
+GET http://localhost:3000/student-api/my-submissions/PUT_STUDENT_OBJECT_ID_HERE
+
+###
+
+### Student → View AI Learning Path
+GET http://localhost:3000/student-api/learning-path/PUT_STUDENT_OBJECT_ID_HERE
+
+###
+
+### Student → View Resources (Question Bank)
+GET http://localhost:3000/student-api/resources/Maths/Algebra
+
+########################################
+### TEACHER APIs
+########################################
+
+### Teacher → Create Assignment
+POST http://localhost:3000/teacher-api/create-assignment
+Content-Type: application/json
+
+{
+  "title": "Algebra Basics",
+  "subject": "Maths",
+  "description": "Solve basic algebra problems",
+  "deadline": "2026-01-25T23:59:59.000Z",
+  "createdBy": "PUT_TEACHER_OBJECT_ID_HERE"
+}
+
+###
+
+### Teacher → View Submissions for an Assignment
+GET http://localhost:3000/teacher-api/view-submissions/PUT_ASSIGNMENT_OBJECT_ID_HERE
+
+###
+
+### Teacher → View AI Suggestions (Learning Path) for Student
+GET http://localhost:3000/teacher-api/ai-suggestion/696e5171ecc86b3b3aac1a1a
