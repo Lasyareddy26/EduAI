@@ -19,6 +19,9 @@ function StudentDashboard() {
   const [upcomingAssignments, setUpcomingAssignments] = useState([])
   const [subjectScores, setSubjectScores] = useState({})
   const [performanceBuckets, setPerformanceBuckets] = useState([0, 0, 0, 0, 0])
+  const [badges, setBadges] = useState([])
+  const [badgeStats, setBadgeStats] = useState({})
+  const [selectedBadge, setSelectedBadge] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const userId = users?._id || (() => {
@@ -103,6 +106,16 @@ function StudentDashboard() {
 
       setSubjectScores(subjectAvg)
       setPerformanceBuckets(buckets)
+
+      // Fetch badges
+      try {
+        const badgeRes = await axios.get(`http://localhost:3000/student-api/badges/${userId}`)
+        setBadges(badgeRes.data.payload.badges || [])
+        setBadgeStats(badgeRes.data.payload.stats || {})
+      } catch (badgeErr) {
+        console.error("Badge fetch error:", badgeErr)
+      }
+
       setLoading(false)
     } catch (err) {
       console.error("Student dashboard fetch error:", err)
@@ -203,6 +216,95 @@ function StudentDashboard() {
 
       {/* CHARTS ROW */}
       <div className="sd-charts-row">
+
+        {/* BADGES SHOWCASE */}
+        <div className="sd-chart-card sd-badges-card">
+          <div className="sd-badges-header">
+            <div>
+              <h3 className="sd-chart-title">🏆 My Badges</h3>
+              <p className="sd-chart-subtitle">
+                {badges.length > 0
+                  ? `${badges.length} badge${badges.length > 1 ? 's' : ''} earned — keep going!`
+                  : 'Complete assignments to earn badges!'}
+              </p>
+            </div>
+            {badges.length > 0 && (
+              <div className="sd-badge-counter">
+                <span className="sd-badge-counter-num">{badges.length}</span>
+                <span className="sd-badge-counter-label">Earned</span>
+              </div>
+            )}
+          </div>
+
+          {/* Badge stats ribbon */}
+          {badges.length > 0 && badgeStats.totalSubmissions > 0 && (
+            <div className="sd-badge-stats-ribbon">
+              <div className="sd-badge-stat-chip">
+                <span className="sd-badge-stat-val">{badgeStats.totalSubmissions}</span>
+                <span className="sd-badge-stat-lbl">Submissions</span>
+              </div>
+              <div className="sd-badge-stat-chip">
+                <span className="sd-badge-stat-val">{badgeStats.perfectScores || 0}</span>
+                <span className="sd-badge-stat-lbl">Perfect 💯</span>
+              </div>
+              <div className="sd-badge-stat-chip">
+                <span className="sd-badge-stat-val">{badgeStats.subjectsAttempted || 0}</span>
+                <span className="sd-badge-stat-lbl">Subjects</span>
+              </div>
+              <div className="sd-badge-stat-chip">
+                <span className="sd-badge-stat-val">{badgeStats.maxStreak || 0}🔥</span>
+                <span className="sd-badge-stat-lbl">Best Streak</span>
+              </div>
+            </div>
+          )}
+
+          {badges.length === 0 ? (
+            <div className="sd-badges-empty">
+              <div className="sd-badges-empty-icon">🎯</div>
+              <p>Submit your first assignment to start earning badges!</p>
+              <button className="sd-action-btn primary" style={{ marginTop: '12px', fontSize: '0.85rem' }} onClick={() => navigate('available-assignments')}>
+                ✍️ Take a Quiz Now
+              </button>
+            </div>
+          ) : (
+            <div className="sd-badges-grid">
+              {badges.map((badge, idx) => (
+                <div
+                  key={badge.id}
+                  className={`sd-badge-item ${badge.tier}`}
+                  onClick={() => setSelectedBadge(selectedBadge?.id === badge.id ? null : badge)}
+                  title={badge.description}
+                  style={{ animationDelay: `${idx * 0.07}s` }}
+                >
+                  <div className="sd-badge-glow"></div>
+                  <div className="sd-badge-icon-wrapper">
+                    <span className="sd-badge-icon">{badge.icon}</span>
+                  </div>
+                  <span className="sd-badge-name">{badge.name}</span>
+                  <span className={`sd-badge-tier-tag ${badge.tier}`}>{badge.tier}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Expanded badge detail */}
+          {selectedBadge && (
+            <div className={`sd-badge-detail ${selectedBadge.tier}`}>
+              <div className="sd-badge-detail-left">
+                <span className="sd-badge-detail-icon">{selectedBadge.icon}</span>
+              </div>
+              <div className="sd-badge-detail-info">
+                <h4>{selectedBadge.name}</h4>
+                <p>{selectedBadge.description}</p>
+                <span className="sd-badge-detail-date">
+                  Earned {new Date(selectedBadge.earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              </div>
+              <button className="sd-badge-detail-close" onClick={() => setSelectedBadge(null)}>✕</button>
+            </div>
+          )}
+        </div>
+
         {/* Performance Bar Chart */}
         <div className="sd-chart-card">
           <h3 className="sd-chart-title">📈 My Performance</h3>

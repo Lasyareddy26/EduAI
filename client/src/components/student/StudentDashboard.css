@@ -610,3 +610,296 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+
+/* ==================== BADGES ==================== */
+
+.sd-badges-card {
+  grid-column: 1 / -1 !important;
+}
+
+.sd-badges-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.sd-badge-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 12px;
+  min-width: 48px;
+}
+
+.sd-badge-counter-num {
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.sd-badge-counter-label {
+  font-size: 0.55rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+
+/* Badges Grid */
+.sd-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+/* Badge stats ribbon */
+.sd-badge-stats-ribbon {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.sd-badge-stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #faf8ff;
+  border: 1px solid #ede9fe;
+  border-radius: 10px;
+  padding: 6px 12px;
+  min-width: 60px;
+}
+
+.sd-badge-stat-val {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #7b2cbf;
+  line-height: 1.2;
+}
+
+.sd-badge-stat-lbl {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Badge item — cute, compact, uniform */
+.sd-badge-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 6px 8px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  width: 100%;
+  aspect-ratio: 1 / 1.1;
+  overflow: hidden;
+  border: 1.5px solid transparent;
+  animation: sdBadgePopIn 0.4s ease both;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+@keyframes sdBadgePopIn {
+  from { opacity: 0; transform: scale(0.6) translateY(12px); }
+  60% { transform: scale(1.08) translateY(-2px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.sd-badge-item:hover {
+  transform: translateY(-3px) scale(1.06);
+}
+
+/* Tier colors — softer, cuter pastels */
+.sd-badge-item.bronze {
+  background: linear-gradient(150deg, #fff7ed, #ffedd5);
+  border-color: #fdba74;
+}
+.sd-badge-item.silver {
+  background: linear-gradient(150deg, #f8fafc, #e2e8f0);
+  border-color: #cbd5e1;
+}
+.sd-badge-item.gold {
+  background: linear-gradient(150deg, #fffbeb, #fef3c7);
+  border-color: #fbbf24;
+}
+.sd-badge-item.platinum {
+  background: linear-gradient(150deg, #f5f3ff, #ede9fe);
+  border-color: #a78bfa;
+}
+
+.sd-badge-item.bronze:hover { box-shadow: 0 4px 16px rgba(251, 146, 60, 0.25); }
+.sd-badge-item.silver:hover { box-shadow: 0 4px 16px rgba(148, 163, 184, 0.3); }
+.sd-badge-item.gold:hover { box-shadow: 0 4px 16px rgba(251, 191, 36, 0.3); }
+.sd-badge-item.platinum:hover { box-shadow: 0 4px 16px rgba(167, 139, 250, 0.3); }
+
+/* Glow effect */
+.sd-badge-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sd-badge-item.gold .sd-badge-glow {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.12) 0%, transparent 70%);
+}
+.sd-badge-item.platinum .sd-badge-glow {
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.12) 0%, transparent 70%);
+}
+.sd-badge-item:hover .sd-badge-glow {
+  opacity: 1;
+}
+
+/* Icon — smaller, cuter circle */
+.sd-badge-icon-wrapper {
+  position: relative;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.sd-badge-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.sd-badge-name {
+  position: relative;
+  z-index: 1;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #374151;
+  text-align: center;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-badge-tier-tag {
+  position: relative;
+  z-index: 1;
+  font-size: 0.48rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 1.5px 6px;
+  border-radius: 5px;
+}
+
+.sd-badge-tier-tag.bronze { background: #f97316; color: #fff; }
+.sd-badge-tier-tag.silver { background: #94a3b8; color: #fff; }
+.sd-badge-tier-tag.gold { background: #eab308; color: #fff; }
+.sd-badge-tier-tag.platinum { background: #8b5cf6; color: #fff; }
+
+/* Empty state */
+.sd-badges-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: #9ca3af;
+}
+
+.sd-badges-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 6px;
+  opacity: 0.5;
+}
+
+.sd-badges-empty p {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Badge detail panel — compact & cute */
+.sd-badge-detail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  animation: sdBadgeSlide 0.3s ease;
+  position: relative;
+}
+
+@keyframes sdBadgeSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sd-badge-detail.bronze { background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 1px solid #fdba74; }
+.sd-badge-detail.silver { background: linear-gradient(135deg, #f8fafc, #e2e8f0); border: 1px solid #cbd5e1; }
+.sd-badge-detail.gold { background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fbbf24; }
+.sd-badge-detail.platinum { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border: 1px solid #a78bfa; }
+
+.sd-badge-detail-left {
+  flex-shrink: 0;
+}
+
+.sd-badge-detail-icon {
+  font-size: 1.8rem;
+}
+
+.sd-badge-detail-info {
+  flex: 1;
+}
+
+.sd-badge-detail-info h4 {
+  margin: 0 0 1px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #1e1b4b;
+}
+
+.sd-badge-detail-info p {
+  margin: 0 0 3px;
+  font-size: 0.78rem;
+  color: #4b5563;
+  line-height: 1.35;
+}
+
+.sd-badge-detail-date {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.sd-badge-detail-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 2px;
+}
+
+.sd-badge-detail-close:hover {
+  color: #dc2626;
+}

@@ -55,6 +55,335 @@ studentApp.get("/my-submissions/:studentId", (req, res) => {
     .catch(err => res.status(500).send({ message: "Error", payload: err.message }))
 })
 
+// STUDENT → VIEW SINGLE SUBMISSION WITH FEEDBACK
+studentApp.get("/submission-detail/:submissionId", (req, res) => {
+  submissionModel.findById(req.params.submissionId)
+    .populate("assignmentId", "title topic subject totalMarks questions")
+    .populate("studentId", "firstName lastName email")
+    .then(submission => {
+      if (!submission) {
+        return res.status(404).send({ message: "Submission not found", payload: null })
+      }
+      res.send({ message: "Submission fetched", payload: submission })
+    })
+    .catch(err => res.status(500).send({ message: "Error", payload: err.message }))
+})
+
+// STUDENT → GET BADGES (computed from submissions + learning paths)
+studentApp.get("/badges/:studentId", async (req, res) => {
+  try {
+    const studentId = req.params.studentId
+    const submissions = await submissionModel.find({ studentId })
+      .populate("assignmentId", "title topic subject totalMarks createdAt")
+      .sort({ createdAt: 1 }) // oldest first for streak calc
+
+    const learningPaths = await learningModel.find({ studentId })
+    const badges = []
+
+    console.log(`[Badges] Student ${studentId}: ${submissions.length} submissions, ${learningPaths.length} learning paths`)
+
+    // --- 1. FIRST STEPS ---
+    if (submissions.length >= 1) {
+      badges.push({
+        id: 'first-submission',
+        name: 'First Steps',
+        description: 'Submitted your very first assignment',
+        icon: '🚀',
+        tier: 'bronze',
+        earnedAt: submissions[0].createdAt
+      })
+    }
+
+    // --- 2. QUIZ MACHINE (3, 5, 10, 25 submissions) ---
+    const subCounts = [
+      { count: 3, name: 'Getting Started', desc: 'Completed 3 assignments', tier: 'bronze' },
+      { count: 5, name: 'Quiz Taker', desc: 'Completed 5 assignments', tier: 'bronze' },
+      { count: 10, name: 'Quiz Machine', desc: 'Completed 10 assignments', tier: 'silver' },
+      { count: 25, name: 'Unstoppable', desc: 'Completed 25 assignments', tier: 'gold' },
+    ]
+    for (const sc of subCounts) {
+      if (submissions.length >= sc.count) {
+        badges.push({
+          id: `submissions-${sc.count}`,
+          name: sc.name,
+          description: sc.desc,
+          icon: '📝',
+          tier: sc.tier,
+          earnedAt: submissions[sc.count - 1].createdAt
+        })
+      }
+    }
+
+    // --- 3. PERFECT SCORE ---
+    const perfectSubs = submissions.filter(s => {
+      const total = s.assignmentId?.totalMarks
+      return total && total > 0 && s.finalScore >= total
+    })
+    if (perfectSubs.length >= 1) {
+      badges.push({
+        id: 'perfect-score',
+        name: 'Perfectionist',
+        description: 'Scored 100% on an assignment',
+        icon: '💯',
+        tier: 'gold',
+        earnedAt: perfectSubs[0].createdAt
+      })
+    }
+    if (perfectSubs.length >= 3) {
+      badges.push({
+        id: 'triple-perfect',
+        name: 'Flawless',
+        description: 'Scored 100% on 3 different assignments',
+        icon: '👑',
+        tier: 'platinum',
+        earnedAt: perfectSubs[2].createdAt
+      })
+    }
+
+    // --- 4. HIGH SCORER (80%+ on 3 assignments) ---
+    const highScoreSubs = submissions.filter(s => {
+      const total = s.assignmentId?.totalMarks
+      return total && total > 0 && (s.finalScore / total) >= 0.8
+    })
+    if (highScoreSubs.length >= 3) {
+      badges.push({
+        id: 'high-scorer',
+        name: 'Honor Roll',
+        description: 'Scored 80%+ on 3 assignments',
+        icon: '🏅',
+        tier: 'gold',
+        earnedAt: highScoreSubs[2].createdAt
+      })
+    }
+
+    // --- 5. SUBJECT EXPLORER (submitted in 3+ different subjects) ---
+    const subjectSet = new Set()
+    submissions.forEach(s => {
+      if (s.assignmentId?.subject) subjectSet.add(s.assignmentId.subject)
+    })
+    if (subjectSet.size >= 3) {
+      badges.push({
+        id: 'subject-explorer',
+        name: 'Explorer',
+        description: `Attempted assignments in ${subjectSet.size} different subjects`,
+        icon: '🧭',
+        tier: 'silver',
+        earnedAt: submissions.find((s, i) => {
+          const seen = new Set()
+          for (let j = 0; j <= i; j++) {
+            if (submissions[j].assignmentId?.subject) seen.add(submissions[j].assignmentId.subject)
+          }
+          return seen.size >= 3
+        })?.createdAt
+      })
+    }
+    if (subjectSet.size >= 5) {
+      badges.push({
+        id: 'renaissance',
+        name: 'Renaissance Mind',
+        description: `Mastered ${subjectSet.size} different subjects`,
+        icon: '🎨',
+        tier: 'gold',
+        earnedAt: new Date()
+      })
+    }
+
+    // --- 6. STREAK (submissions on consecutive days) ---
+    const daySet = new Set()
+    submissions.forEach(s => {
+      daySet.add(new Date(s.createdAt).toISOString().slice(0, 10))
+    })
+    const sortedDays = [...daySet].sort()
+    let maxStreak = 1, currentStreak = 1
+    for (let i = 1; i < sortedDays.length; i++) {
+      const prev = new Date(sortedDays[i - 1])
+      const curr = new Date(sortedDays[i])
+      const diff = (curr - prev) / (1000 * 60 * 60 * 24)
+      if (diff === 1) { currentStreak++; maxStreak = Math.max(maxStreak, currentStreak) }
+      else { currentStreak = 1 }
+    }
+    if (maxStreak >= 3) {
+      badges.push({
+        id: 'streak-3',
+        name: 'On Fire',
+        description: `${maxStreak}-day submission streak!`,
+        icon: '🔥',
+        tier: maxStreak >= 7 ? 'gold' : 'silver',
+        earnedAt: new Date()
+      })
+    }
+
+    // --- 7. NIGHT OWL (submitted after 10 PM) ---
+    const nightSubs = submissions.filter(s => {
+      const hour = new Date(s.createdAt).getHours()
+      return hour >= 22 || hour < 5
+    })
+    if (nightSubs.length >= 1) {
+      badges.push({
+        id: 'night-owl',
+        name: 'Night Owl',
+        description: 'Submitted an assignment late at night 🌙',
+        icon: '🦉',
+        tier: 'bronze',
+        earnedAt: nightSubs[0].createdAt
+      })
+    }
+
+    // --- 8. EARLY BIRD (submitted before 7 AM) ---
+    const earlySubs = submissions.filter(s => {
+      const hour = new Date(s.createdAt).getHours()
+      return hour >= 5 && hour < 7
+    })
+    if (earlySubs.length >= 1) {
+      badges.push({
+        id: 'early-bird',
+        name: 'Early Bird',
+        description: 'Submitted an assignment before 7 AM ☀️',
+        icon: '🐦',
+        tier: 'bronze',
+        earnedAt: earlySubs[0].createdAt
+      })
+    }
+
+    // --- 9. COMEBACK KID (scored <40% then >80% in same subject) ---
+    const subjectHistory = {}
+    submissions.forEach(s => {
+      const subj = s.assignmentId?.subject
+      const total = s.assignmentId?.totalMarks
+      if (!subj || !total || total === 0) return
+      const pct = (s.finalScore / total) * 100
+      if (!subjectHistory[subj]) subjectHistory[subj] = []
+      subjectHistory[subj].push({ pct, date: s.createdAt })
+    })
+    for (const subj of Object.keys(subjectHistory)) {
+      const hist = subjectHistory[subj]
+      let hadLow = false
+      for (const entry of hist) {
+        if (entry.pct < 40) hadLow = true
+        if (hadLow && entry.pct >= 80) {
+          badges.push({
+            id: 'comeback-kid',
+            name: 'Comeback Kid',
+            description: `Went from failing to acing in ${subj}!`,
+            icon: '⚡',
+            tier: 'platinum',
+            earnedAt: entry.date
+          })
+          break
+        }
+      }
+      if (badges.find(b => b.id === 'comeback-kid')) break
+    }
+
+    // --- 10. LEARNING PATH HERO ---
+    const completedSteps = learningPaths.reduce((acc, lp) => {
+      return acc + (lp.roadmap || []).filter(s => s.status === 'completed').length
+    }, 0)
+    if (completedSteps >= 5) {
+      badges.push({
+        id: 'path-walker',
+        name: 'Path Walker',
+        description: `Completed ${completedSteps} learning path steps`,
+        icon: '🗺️',
+        tier: completedSteps >= 15 ? 'gold' : 'silver',
+        earnedAt: new Date()
+      })
+    }
+
+    // --- 11. SPEED DEMON (submitted within first day of assignment creation) ---
+    const speedSubs = submissions.filter(s => {
+      if (!s.assignmentId?.createdAt) return false
+      const diff = new Date(s.createdAt) - new Date(s.assignmentId.createdAt)
+      return diff >= 0 && diff < 24 * 60 * 60 * 1000 // within 24 hours
+    })
+    if (speedSubs.length >= 1) {
+      badges.push({
+        id: 'speed-demon',
+        name: 'Speed Demon',
+        description: 'Submitted within 24 hours of assignment creation',
+        icon: '⚡',
+        tier: 'silver',
+        earnedAt: speedSubs[0].createdAt
+      })
+    }
+
+    // --- 12. BRAVE HEART (scored <50% but kept submitting — at least 2 subs) ---
+    const lowSubs = submissions.filter(s => {
+      const total = s.assignmentId?.totalMarks
+      return total && total > 0 && (s.finalScore / total) < 0.5
+    })
+    if (lowSubs.length >= 1 && submissions.length >= 2) {
+      badges.push({
+        id: 'brave-heart',
+        name: 'Brave Heart',
+        description: 'Kept going even when scores were tough 💪',
+        icon: '🦁',
+        tier: 'bronze',
+        earnedAt: submissions[submissions.length - 1].createdAt
+      })
+    }
+
+    // --- 13. MULTI-SUBJECT (submitted in 2+ different subjects) ---
+    if (subjectSet.size >= 2) {
+      badges.push({
+        id: 'multi-subject',
+        name: 'Well-Rounded',
+        description: `Explored ${subjectSet.size} subjects so far`,
+        icon: '📚',
+        tier: 'bronze',
+        earnedAt: submissions.find((s, i) => {
+          const seen = new Set()
+          for (let j = 0; j <= i; j++) {
+            if (submissions[j].assignmentId?.subject) seen.add(submissions[j].assignmentId.subject)
+          }
+          return seen.size >= 2
+        })?.createdAt || new Date()
+      })
+    }
+
+    // --- 14. CONSISTENT (all submissions scored above 50%) ---
+    if (submissions.length >= 3) {
+      const allAbove50 = submissions.every(s => {
+        const total = s.assignmentId?.totalMarks
+        if (!total || total === 0) return true
+        return (s.finalScore / total) >= 0.5
+      })
+      if (allAbove50) {
+        badges.push({
+          id: 'consistent',
+          name: 'Steady Performer',
+          description: 'Never dropped below 50% on any assignment!',
+          icon: '📈',
+          tier: 'silver',
+          earnedAt: submissions[submissions.length - 1].createdAt
+        })
+      }
+    }
+
+    // Sort: platinum > gold > silver > bronze, then by date
+    const tierOrder = { platinum: 4, gold: 3, silver: 2, bronze: 1 }
+    badges.sort((a, b) => (tierOrder[b.tier] || 0) - (tierOrder[a.tier] || 0))
+
+    res.send({
+      message: "Badges computed",
+      payload: {
+        badges,
+        stats: {
+          totalBadges: badges.length,
+          totalSubmissions: submissions.length,
+          maxStreak,
+          subjectsAttempted: subjectSet.size,
+          perfectScores: perfectSubs.length,
+          completedLearningSteps: completedSteps,
+        }
+      }
+    })
+  } catch (err) {
+    console.error("Badge computation error:", err)
+    res.status(500).send({ message: "Error computing badges", payload: err.message })
+  }
+})
+
 // STUDENT → VIEW AI LEARNING PATHS (all topics)
 studentApp.get("/learning-path/:studentId", async (req, res) => {
   try {

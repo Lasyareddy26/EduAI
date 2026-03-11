@@ -276,12 +276,13 @@ function AssignmentSubmissions() {
                   {isManual && (
                     <div style={{marginTop:'10px', padding:'10px', background:'#fff', borderRadius:'8px', border:'1px dashed #d97706'}}>
                       <div style={{display:'flex', gap:'15px', alignItems:'center', marginBottom:'8px', flexWrap:'wrap'}}>
-                        <label style={{fontWeight:600, fontSize:'0.85rem'}}>Marks (0–100):</label>
+                        <label style={{fontWeight:600, fontSize:'0.85rem'}}>Marks (0–{maxMarks}):</label>
                         <div style={{display:'flex', alignItems:'center', gap:'10px', flex:1, minWidth:'200px'}}>
                           <input
                             type="range"
                             min="0"
-                            max="100"
+                            max={maxMarks}
+                            step="0.5"
                             value={gradingData[ans.questionId]?.marksAwarded || 0}
                             onChange={(e) => handleGradeChange(ans.questionId, 'marksAwarded', e.target.value)}
                             style={{flex:1, accentColor:'#7b2cbf'}}
@@ -289,15 +290,16 @@ function AssignmentSubmissions() {
                           <input
                             type="number"
                             min="0"
-                            max="100"
+                            max={maxMarks}
+                            step="0.5"
                             value={gradingData[ans.questionId]?.marksAwarded || 0}
                             onChange={(e) => {
-                              const val = Math.min(100, Math.max(0, Number(e.target.value) || 0))
+                              const val = Math.min(maxMarks, Math.max(0, Number(e.target.value) || 0))
                               handleGradeChange(ans.questionId, 'marksAwarded', val)
                             }}
                             style={{width:'60px', padding:'6px', borderRadius:'6px', border:'1px solid #ccc', textAlign:'center', fontWeight:700}}
                           />
-                          <span style={{fontSize:'0.85rem', color:'#6b7280'}}>/100</span>
+                          <span style={{fontSize:'0.85rem', color:'#6b7280'}}>/{maxMarks}</span>
                         </div>
                       </div>
                       <textarea
