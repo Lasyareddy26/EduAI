@@ -430,10 +430,14 @@ studentApp.post("/submit-assignment", async (req, res) => {
     let manualScore = 0;
     let hasManualQuestions = false;
 
-    const evaluatedAnswers = (submissionData.answers || []).map(ans => {
+    const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:5001";
+
+    const evaluatedAnswers = [];
+    for (const ans of (submissionData.answers || [])) {
       const question = assignment.questions.find(q => q._id.toString() === ans.questionId);
       if (!question) {
-        return { ...ans, isCorrect: null, marksAwarded: 0 };
+        evaluatedAnswers.push({ ...ans, isCorrect: null, marksAwarded: 0 });
+        continue;
       }
 
       const qType = question.type;
@@ -445,13 +449,46 @@ studentApp.post("/submit-assignment", async (req, res) => {
         const isCorrect = studentAnswer === correctAnswer;
         const marksAwarded = isCorrect ? (question.marks || 1) : 0;
         autoScore += marksAwarded;
-        return { ...ans, isCorrect, marksAwarded };
+        evaluatedAnswers.push({ ...ans, isCorrect, marksAwarded });
+        continue;
       }
 
-      // Manual evaluation needed: short, essay
+      // Essay: auto-evaluate using RAG service
+      if (qType === "essay") {
+        hasManualQuestions = true;
+        try {
+          console.log(`🤖 Evaluating essay Q: "${question.questionText?.substring(0, 50)}..."`);
+          const ragResponse = await axios.post(`${RAG_SERVICE_URL}/evaluate-essay`, {
+            question_text: question.questionText,
+            student_answer: ans.answer || "",
+            max_marks: question.marks || 10,
+            subject: assignment.subject,
+            topic: assignment.topic || assignment.title
+          }, { timeout: 30000 });
+
+          const aiResult = ragResponse.data;
+          console.log(`🤖 AI Score: ${aiResult.aiScore}/${question.marks}, Confidence: ${aiResult.confidence}`);
+
+          evaluatedAnswers.push({
+            ...ans,
+            isCorrect: null,
+            marksAwarded: 0,
+            teacherComment: "",
+            aiMarksAwarded: aiResult.aiScore,
+            aiFeedback: aiResult.aiFeedback || "AI evaluation completed."
+          });
+        } catch (ragErr) {
+          console.error("⚠️ RAG Essay Eval Warning:", ragErr.message);
+          // Fallback: no AI score, teacher must grade manually
+          evaluatedAnswers.push({ ...ans, isCorrect: null, marksAwarded: 0, teacherComment: "", aiMarksAwarded: null, aiFeedback: "" });
+        }
+        continue;
+      }
+
+      // Short answer: manual evaluation needed (no change)
       hasManualQuestions = true;
-      return { ...ans, isCorrect: null, marksAwarded: 0, teacherComment: "" };
-    });
+      evaluatedAnswers.push({ ...ans, isCorrect: null, marksAwarded: 0, teacherComment: "" });
+    }
 
     const evaluationStatus = hasManualQuestions ? "pending-review" : "auto-complete";
     const finalScore = autoScore; // Will be updated when teacher reviews manual answers

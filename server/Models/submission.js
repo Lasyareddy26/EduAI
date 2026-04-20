@@ -19,7 +19,9 @@ const submissionSchema = new mongoose.Schema({
       answer: String,
       isCorrect: { type: Boolean, default: null },    // null = not evaluated yet
       marksAwarded: { type: Number, default: 0 },
-      teacherComment: { type: String, default: "" }
+      teacherComment: { type: String, default: "" },
+      aiMarksAwarded: { type: Number, default: null },  // AI-suggested score
+      aiFeedback: { type: String, default: "" }          // AI evaluation feedback
     }
   ],
 
