@@ -84,9 +84,32 @@ function CreateAssignment() {
         question_type: ragQuestionType
       })
 
-      const generated = res.data.payload
+      const generated = res.data.payload;
       if (Array.isArray(generated)) {
-        setQuestions([...questions, ...generated])
+        const newQuestions = generated.map(q => {
+          if (typeof q === 'string') {
+            // Handle cases where the AI returns an array of strings for essays
+            return { 
+              questionText: q, 
+              type: 'essay', 
+              marks: 10, // Default marks for an essay
+              options: [], 
+              correctAnswer: '' 
+            };
+          }
+          return q;
+        });
+        setQuestions([...questions, ...newQuestions]);
+      } else if (typeof generated === 'string') {
+        // Handle case where AI returns a single string for an essay question
+        const newEssayQuestion = {
+          questionText: generated,
+          type: 'essay',
+          marks: 10, // Default marks
+          options: [],
+          correctAnswer: ''
+        };
+        setQuestions([...questions, newEssayQuestion]);
       } else {
         alert("AI returned text instead of structured questions. Check the console.")
         console.log("RAG response:", generated)
