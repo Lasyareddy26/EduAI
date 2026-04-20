@@ -220,6 +220,180 @@ def generate_questions():
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
+@app.route("/evaluate-essay", methods=["POST"])
+def evaluate_essay():
+    """Auto-evaluate an essay answer using semantic search + LLM."""
+    data = request.json
+    question_text = data.get("question_text", "")
+    student_answer = data.get("student_answer", "")
+    max_marks = data.get("max_marks", 10)
+    subject = data.get("subject", "General")
+    topic = data.get("topic", "General")
+    session_id = data.get("session_id", None)
+
+    if not student_answer or not student_answer.strip():
+        return jsonify({
+            "aiScore": 0,
+            "aiFeedback": "No answer provided.",
+            "confidence": "high"
+        })
+
+    # --- 1. Answer length analysis ---
+    word_count = len(student_answer.split())
+    # Expected words: ~20 words per mark (e.g., 10 marks → ~200 words)
+    expected_words = max_marks * 20
+    length_ratio = min(word_count / max(expected_words, 1), 1.5)  # cap at 1.5
+
+    # --- 2. Semantic similarity with PDF context (if available) ---
+    similarity_score = 0.0
+    context_text = ""
+
+    # Try to find a session with vectorstore
+    if session_id and session_id in sessions:
+        session_db_dir = os.path.join(DB_DIR, session_id)
+        if os.path.exists(session_db_dir):
+            try:
+                vectorstore = Chroma(
+                    persist_directory=session_db_dir,
+                    embedding_function=embeddings
+                )
+                # Retrieve relevant chunks using the question
+                relevant_docs = vectorstore.similarity_search_with_score(question_text, k=5)
+                if relevant_docs:
+                    context_text = "\n".join([doc.page_content for doc, score in relevant_docs])
+
+                    # Compute cosine similarity between student answer and context
+                    import numpy as np
+                    answer_embedding = embeddings.embed_query(student_answer)
+                    context_embedding = embeddings.embed_query(context_text)
+
+                    # Cosine similarity
+                    a = np.array(answer_embedding)
+                    b = np.array(context_embedding)
+                    similarity_score = float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+            except Exception as e:
+                print(f"Vectorstore error: {e}")
+    else:
+        # No session — try to find ANY session that might match
+        for sid, sdata in sessions.items():
+            session_db_dir = os.path.join(DB_DIR, sid)
+            if os.path.exists(session_db_dir):
+                try:
+                    vectorstore = Chroma(
+                        persist_directory=session_db_dir,
+                        embedding_function=embeddings
+                    )
+                    relevant_docs = vectorstore.similarity_search_with_score(question_text, k=5)
+                    if relevant_docs:
+                        context_text = "\n".join([doc.page_content for doc, score in relevant_docs])
+                        import numpy as np
+                        answer_embedding = embeddings.embed_query(student_answer)
+                        context_embedding = embeddings.embed_query(context_text)
+                        a = np.array(answer_embedding)
+                        b = np.array(context_embedding)
+                        similarity_score = float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+                        break  # Use the first matching session
+                except Exception:
+                    continue
+
+    # --- 3. LLM-based evaluation ---
+    # Determine similarity description for the prompt
+    sim_description = ""
+    if context_text:
+        if similarity_score < 0.3:
+            sim_description = f"CRITICAL: Semantic similarity with reference material is VERY LOW ({similarity_score:.2f}/1.00). The answer likely does NOT match the expected content."
+        elif similarity_score < 0.5:
+            sim_description = f"WARNING: Semantic similarity with reference material is LOW ({similarity_score:.2f}/1.00). The answer may be partially off-topic."
+        else:
+            sim_description = f"Semantic similarity with reference material: {similarity_score:.2f}/1.00"
+
+    eval_prompt = f"""You are a STRICT and RIGOROUS teacher evaluating a student's essay answer. You must be honest and fair — do NOT give generous scores.
+
+Subject: {subject}
+Topic: {topic}
+Question: {question_text}
+Maximum Marks: {max_marks}
+
+Student's Answer:
+{student_answer}
+
+{"Reference Context from PDF (this is the CORRECT content the answer should be based on):" if context_text else "No reference context available — evaluate based on general knowledge of the subject and topic."}
+{context_text[:3000] if context_text else ""}
+
+STRICT SCORING RUBRIC — You MUST follow this:
+- **0 marks**: Answer is COMPLETELY IRRELEVANT, off-topic, nonsensical, or does not address the question AT ALL. Even if the answer is long, if it talks about something unrelated to the question, it deserves 0.
+- **1 to {round(max_marks * 0.3)}** marks: Answer is MOSTLY IRRELEVANT but may contain a few vaguely related words. Very poor understanding.
+- **{round(max_marks * 0.3)} to {round(max_marks * 0.5)}** marks: Answer is PARTIALLY RELEVANT but has significant gaps, errors, or only scratches the surface.
+- **{round(max_marks * 0.5)} to {round(max_marks * 0.8)}** marks: Answer is MOSTLY CORRECT and relevant, covers key points but may miss some depth or have minor inaccuracies.
+- **{round(max_marks * 0.8)} to {max_marks}** marks: Answer is EXCELLENT — accurate, detailed, well-explained, and directly addresses the question using correct concepts.
+
+CRITICAL RULES:
+1. If the student's answer discusses a DIFFERENT TOPIC than what the question asks, score MUST be 0 regardless of answer length. NO partial points for effort.
+2. Answer length alone does NOT justify a high score. A long irrelevant answer is still worth 0.
+3. The student wrote {word_count} words (expected ~{expected_words} words for {max_marks} marks). Short answers should be penalized proportionally.
+{sim_description}
+
+Return your evaluation as a JSON object with exactly these fields:
+{{"score": <number between 0 and {max_marks}>, "feedback": "<brief 2-3 sentence feedback explaining WHY you gave this score>", "confidence": "<high|medium|low>"}}
+
+Return ONLY the JSON object, no extra text."""
+
+    try:
+        result = llm.invoke(eval_prompt)
+        response_text = result.content
+
+        import json
+        # Parse the JSON response
+        json_start = response_text.find("{")
+        json_end = response_text.rfind("}") + 1
+        if json_start != -1 and json_end > 0:
+            eval_result = json.loads(response_text[json_start:json_end])
+            ai_score = min(max(float(eval_result.get("score", 0)), 0), max_marks)
+            ai_feedback = eval_result.get("feedback", "AI evaluation completed.")
+            confidence = eval_result.get("confidence", "medium")
+
+            # Post-processing: penalize score if semantic similarity is very low
+            if context_text and similarity_score < 0.4 and ai_score > max_marks * 0.1:
+                # Cap score at 10% of max if answer is semantically very different from context
+                ai_score = min(ai_score, max_marks * 0.1)
+                ai_feedback += f" [Score capped due to very low relevance to source material ({similarity_score:.2f} similarity)]"
+                confidence = "high"
+            elif context_text and similarity_score < 0.5 and ai_score > max_marks * 0.4:
+                # Cap at 40% if similarity is low
+                ai_score = min(ai_score, max_marks * 0.4)
+                ai_feedback += f" [Score adjusted due to low relevance ({similarity_score:.2f} similarity)]"
+
+            # Round score to nearest 0.5
+            ai_score = round(ai_score * 2) / 2
+
+            return jsonify({
+                "aiScore": ai_score,
+                "aiFeedback": ai_feedback,
+                "confidence": confidence,
+                "debug": {
+                    "wordCount": word_count,
+                    "expectedWords": expected_words,
+                    "lengthRatio": round(length_ratio, 2),
+                    "similarityScore": round(similarity_score, 3),
+                    "hasContext": bool(context_text)
+                }
+            })
+    except Exception as e:
+        print(f"LLM evaluation error: {e}")
+
+    # Fallback: estimate score from length + similarity (stricter)
+    if context_text and similarity_score < 0.3:
+        fallback_score = max_marks * 0.1  # Very low similarity = near zero
+    else:
+        fallback_score = round(max_marks * min(length_ratio, 1.0) * 0.4 + max_marks * similarity_score * 0.6, 1)
+    fallback_score = min(fallback_score, max_marks)
+    return jsonify({
+        "aiScore": round(fallback_score * 2) / 2,
+        "aiFeedback": "Auto-scored based on answer length and relevance. Teacher review recommended.",
+        "confidence": "low"
+    })
+
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok", "sessions": len(sessions)})
