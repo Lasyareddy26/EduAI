@@ -378,16 +378,13 @@ Ctrl+Shift+P → Tasks: Run Task → Backend Server (port 3000)
 
 ## 🎬 Demo Video
 
-<!-- Add your demo video here -->
 <div align="center">
 
 ### 📹 Watch the Full Demo
 
-[![EduAI Demo](https://img.shields.io/badge/▶️%20Watch%20Demo-YouTube-red?style=for-the-badge&logo=youtube)](YOUR_YOUTUBE_LINK_HERE)
+[![EduAI Demo](https://img.shields.io/badge/▶️%20Watch%20Demo-Google%20Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1Xmsa_HZU1oOwv-xENfkxfIilOe8NVyWJ/view?usp=drive_link)
 
-**Coming Soon!**
-
-*A comprehensive video walkthrough showcasing all features of the EduAI platform.*
+> 🎥 **Click the button above** to watch a comprehensive walkthrough of the EduAI platform showcasing all features including AI-powered learning paths, automated grading, RAG-based question generation, and the multilingual chatbot.
 
 </div>
 
